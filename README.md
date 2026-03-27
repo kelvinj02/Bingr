@@ -1,2 +1,3 @@
-#COMP 380 Project
-#Movie-Book-Recommender
+# COMP 380 Project
+
+Movie-Book-Recommender
