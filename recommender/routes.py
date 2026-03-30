@@ -2,6 +2,7 @@ from flask import render_template, url_for, flash, redirect
 from recommender import app, db, bcrypt
 from recommender.forms import RegistrationForm, LoginForm
 from recommender.models import User, Comment, WishListItem
+from flask_login import login_user, current_user, logout_user
 
 @app.route("/")
 @app.route("/home")
@@ -11,6 +12,8 @@ def home():
 
 @app.route("/signup", methods=['GET', 'POST'])
 def signup():
+    if current_user.is_authenticated:   #redirect to home page if user is already login
+        return redirect(url_for('home'))
     form=RegistrationForm()
     if form.validate_on_submit():
         #get a hash string for password instead of byte using decode
@@ -24,10 +27,19 @@ def signup():
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form=LoginForm()
-    # if form.validate_on_submit():
-    #     if form.email.data == "example@gmail.com" and form.password.data == 'password':
-    #         flash("You have been login!", "success")
-    #     else:
-    #         flash("Login Unsuccessful. Please check email and password", "danger")
+    if form.validate_on_submit():
+        user=User.query.filter_by(email=form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user, remember=form.remember.data)
+            return redirect(url_for('home'))
+        else:
+            flash("Login Unsuccessful. Please check email and password", "danger")
     return render_template("login.html", title="Login", form=form)
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
