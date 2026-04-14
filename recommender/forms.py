@@ -33,3 +33,18 @@ class CommentForm(FlaskForm):
     review_score = FloatField("Rating", validators=[DataRequired(), NumberRange(min=0.5, max=5)])
     body = TextAreaField("Comment Content", validators=[DataRequired(), Length(min=1, max=200)])
     submit = SubmitField("Post")
+
+#Request Password Reset Form
+class RequestResetForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    submit = SubmitField("Request Password Reset")
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is None:
+            raise ValidationError("There is no account with that email. You must register first.")
+        
+#Reset Password Form
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField("Password", validators=[DataRequired(), Length(min=8, max=30)])
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), Length(min=8, max=30)])
+    submit = SubmitField("Reset Password")

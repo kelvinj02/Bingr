@@ -8,3 +8,4 @@ Flask-SQLAlchemy
 Flask-WTF
 SQLAlchemy
 WTForms
+itsdangerous
