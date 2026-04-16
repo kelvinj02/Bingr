@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, FloatField, TextAreaField
-from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, NumberRange
+from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from recommender.models import User
 
 #Registration Form
@@ -27,12 +27,6 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired(), Length(min=8, max=30)])
     remember = BooleanField("Remember Me")
     submit = SubmitField("Login")
-
-#Comment Form
-class CommentForm(FlaskForm):
-    review_score = FloatField("Rating", validators=[DataRequired(), NumberRange(min=0.5, max=5)])
-    body = TextAreaField("Comment Content", validators=[DataRequired(), Length(min=1, max=200)])
-    submit = SubmitField("Post")
 
 #Request Password Reset Form
 class RequestResetForm(FlaskForm):
