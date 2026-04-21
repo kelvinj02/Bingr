@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Home | BinGr{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container hero-content">
+        <div class="hero-text">
+            <h1>Find your next favorite movie or book on BinGr</h1>
+            
+            <div class="hero-buttons">
+                <a href="{{ url_for('search') }}" class="btn btn-primary">Start Exploring</a>
+                <a href="{{ url_for('signup') }}" class="btn btn-outline">Create Account</a>
+            </div>
+        </div>
+
+        <div class="hero-image">
+            <div class = "hero-placeholder">Featured</div>
+        </div>
+    </div>
+</section>
