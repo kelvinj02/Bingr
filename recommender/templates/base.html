@@ -3,7 +3,11 @@
     <head>
         <meta charset = "UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=0.1">
-        <title>BinGr</title>
+        {% if title %}
+            <title>BinGr - {{ title }}</title>
+        {% else %}
+            <title>BinGr</title>
+        {% endif %}
         <link rel="stylesheet" href = "{{url_for('static', filename='css/main.css')}}">
     </head>
     <body>
@@ -38,7 +42,7 @@
             {% endwith %}
         </div>
 
-        {% block content %}{% endblock %}
+        {% block content %}{% endblock content %}
     </main>
 
     <footer class=""site-footer">
