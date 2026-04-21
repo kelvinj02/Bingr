@@ -19,3 +19,65 @@
         </div>
     </div>
 </section>
+
+<section class="quick-search">
+    <div class="container">
+        <h2>Search for books or movies</h2>
+        <form class="search-form">
+            <input type="text" placeholder="Search by title, author, or director">
+            <select>
+                <option value="">All</option>
+                <option value="movie">Movies</option>
+                <option value="book">Books</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+</section>
+
+
+
+<section class="genres">
+    <div class="container">
+        <h2>Browse by Genre</h2>
+        <div class="genre-list">
+            <a href="#" class="genre-pill">Action</a>
+            <a href="#" class="genre-pill">Fantasy</a>
+            <a href="#" class="genre-pill">Romance</a>
+            <a href="#" class="genre-pill">Sci-Fi</a>
+            <a href="#" class="genre-pill">Mystery</a>
+            <a href="#" class="genre-pill">Horror</a>
+            <a href="#" class="genre-pill">Comedy</a>
+            <a href="#" class="genre-pill">Drama</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2>Why use BinGr?</h2>
+        <div class="feature-grid">
+            <div class="feature-box">
+                <h3>Smart Recommendations</h3>
+                <p>Get suggestions based on what you already enjoy.</p>
+            </div>
+            <div class="feature-box">
+                <h3>Save for Later</h3>
+                <p>Keep track of books and movies you want to revisit.</p>
+            </div>
+            <div class="feature-box">
+                <h3>Rate and Comment</h3>
+                <p>Share opinions and help others discover great content.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="container cta-content">
+        <h2>Create an account for personalized recommendations</h2>
+        <p>Sign up to save favorites, track your history, and get better suggestions.</p>
+        <a href="{{ url_for('signup') }}" class="btn btn-primary">Get Started</a>
+    </div>
+</section>
+{% endblock %}
