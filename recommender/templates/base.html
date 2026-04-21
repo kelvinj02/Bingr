@@ -1,17 +1,53 @@
 <!DOCTYPE html>
 <html lang ="en">
-  <head>
-    <title>BINGR</title>
-  </head>
-  <body>
+    <head>
+        <meta charset = "UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=0.1">
+        <title>BinGr</title>
+        <link rel="stylesheet" href = "style.css">
+    </head>
+    <body>
+    <header class = "site-header">
+        <nav class = "navbar container">
+            <a href ="{{url_for('main.home')}}" class = "logo">BinGr</a>
+            
+            <ul class="nav-links">
+                <li><a href="{{url_for('main.home')}}">Home</a></li>
+                <li><a href="{{url_for('main.home')}}#discover">Discover</a></li>
+                <li><a href="{{url_for('main.home')}}#genres">Genres</a></li>
+                {% if current_user.is_authenticated%}
+                    <li><a>href ="{{url_for('users.account)}}"</a>Account</li>
+                {% endif%}    
+            </ul>
 
 
-    <footer class="site-footer">
-        <div class="container footer-content">
-            <p>&copy; 2026 BINGR. All rights reserved.</p>
-            <p>Movie data from TMDB. Book data from Google Books.</p>
+
+        </nav>
+    </header>
+        
+    <main class="main-content">
+        <div class="container flash-wrap">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class=""site-footer">
+        <div class ="container footer-content">
+            <p>&copy; 2026 BinGr</p>
+            <p>Movie Data from TMDB. Book Data from Google Books</p>
         </div>
     </footer>
-  </body>
 
+    <script src ="{{url_for('static', filename='js/main.jr')}}"></script>
+    </body>
 </html>
