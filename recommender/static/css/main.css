@@ -1,4 +1,5 @@
-#main-content {
+body {
+    font-style:sans-serif;
     color: white;
     background-color: black;
-}
+} /* Example code */
