@@ -75,6 +75,10 @@ def reset_token(token):
         return redirect(url_for('users.login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
+@users.route("/search")
+def search():
+    return render_template('search_result.html', title='Search Result')
+
 @users.route("/logout")
 def logout():
     logout_user()

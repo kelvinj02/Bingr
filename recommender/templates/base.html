@@ -2,7 +2,7 @@
 <html lang ="en">
     <head>
         <meta charset = "utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=0.1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         {% if title %}
             <title>BinGr - {{ title }}</title>
         {% else %}
@@ -20,7 +20,11 @@
                 <li><a href="{{url_for('main.home')}}#discover">Discover</a></li>
                 <li><a href="{{url_for('main.home')}}#genres">Genres</a></li>
                 {% if current_user.is_authenticated%}
-                    <li><a>href ="{{url_for('users.account)}}"</a>Account</li>
+                    <li><a href="{{ url_for('users.account') }}">Account</a></li>
+                    <li><a href="{{ url_for('users.logout') }}">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('users.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('users.signup') }}">Sign Up</a></li>
                 {% endif%}    
             </ul>
 
@@ -45,7 +49,7 @@
         {% block content %}{% endblock content %}
     </main>
 
-    <footer class=""site-footer">
+    <footer class="site-footer">
         <div class ="container footer-content">
             <p>&copy; 2026 BinGr</p>
             <p>Movie Data from TMDB. Book Data from Google Books</p>
