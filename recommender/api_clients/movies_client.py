@@ -9,7 +9,7 @@ import os
 import requests
 from typing import Optional
 
-TMDB_API_KEY = os.getenv("TMDB_API_KEY", "d3b196cc67178a0775343389b1ff3d4b")
+TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
