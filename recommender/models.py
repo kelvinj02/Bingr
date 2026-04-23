@@ -14,8 +14,8 @@ class User(db.Model, UserMixin):
     username=db.Column(db.String(20), unique=True, nullable=False)
     email=db.Column(db.String(120), unique=True, nullable=False)
     password=db.Column(db.String(60), nullable=False)
-    comments=db.relationship('Comment', backref='author', lazy=True)
-    wishlist=db.relationship('WishListItem', backref='author', lazy=True)
+    #comments=db.relationship('Comment', backref='author', lazy=True)
+    #wishlist=db.relationship('WishListItem', backref='author', lazy=True)
 
     #create a signer using a secret key with a 10 mins expiry
     #and return a token string 
@@ -35,19 +35,19 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"User('{self.username}', '{self.email}')"    
     
-class Comment(db.Model):
-    __tablename__= 'comments'
-    id=db.Column(db.Integer, primary_key=True)
-    user_id=db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    content=db.Column(db.Text, nullable=False)
-    created_at=db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+# class Comment(db.Model):
+#     __tablename__= 'comments'
+#     id=db.Column(db.Integer, primary_key=True)
+#     user_id=db.Column(db.Integer, db.ForeignKey('id'), nullable=False)
+#     content=db.Column(db.Text, nullable=False)
+#     created_at=db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-class WishListItem(db.Model):
-    __tablename__= 'wishlist_items'
-    id=db.Column(db.Integer, primary_key=True)
-    user_id=db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    title=db.Column(db.String(60), nullable=False)
-    added_at=db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+# class WishListItem(db.Model):
+#     __tablename__= 'wishlist_items'
+#     id=db.Column(db.Integer, primary_key=True)
+#     user_id=db.Column(db.Integer, db.ForeignKey('id'), nullable=False)
+#     title=db.Column(db.String(60), nullable=False)
+#     added_at=db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f"WishListItem('{self.title}','{self.added_at}')"
+#     def __repr__(self):
+#         return f"WishListItem('{self.title}','{self.added_at}')"

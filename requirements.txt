@@ -9,3 +9,4 @@ Flask-WTF
 SQLAlchemy
 WTForms
 itsdangerous
+Email-validator

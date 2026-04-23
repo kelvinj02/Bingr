@@ -2,39 +2,45 @@
 
 {% block content %}
 <section class="auth-section">
-    <div class="wrapper">
-        <form method="POST">
-            {{ form.hidden_tag() }}
+    <div class="container auth-container">
+        <div class="auth-card">
+            <legend>Welcome back</legend>
+            <p class="auth-subtext">
+                Login to your BinGr account.
+            </p>
 
-            <h1>Login</h1>
+            <form method="POST" class="auth-form">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.email.label(class="form-label") }}
+                    {{ form.email(class="form-input", placeholder="Enter email") }}
+                    {% for error in form.email.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
 
-            <div class="input-box">
-                {{ form.email(class="form-input", placeholder="Email") }}
-                {% for error in form.email.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
-            </div>
+                <div class="form-group">
+                    {{ form.password.label(class="form-label") }}
+                    {{ form.password(class="form-input", placeholder="Enter password") }}
+                    {% for error in form.password.errors %}
+                        <span class="form-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
 
-            <div class="input-box">
-                {{ form.password(class="form-input", placeholder="Password") }}
-                {% for error in form.password.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
-            </div>
+                <div>
+                    {{ form.submit(class="btn btn-primary btn-full") }}
+                    <small>
+                        <a href="{{ url_for('users.reset_request') }}">Forgot Password?</a>
+                    </small>
+                </div>
+                
+            </form>
 
-            <div class="remember-forgot">
-                <label>{{ form.remember() }} Remember me</label>
-                <a href="{{ url_for('users.reset_request') }}">Forgot Password?</a>
-            </div>
-
-            {{ form.submit(class="btn") }}
-
-            <div class="register-link">
-                <p>Don't have an account?
-                    <a href="{{ url_for('users.signup') }}">Register</a>
-                </p>
-            </div>
-        </form>
+            <p class="auth-switch">
+                Need An Account?
+                <a href="{{ url_for('users.login') }}">Sign Up Now</a>
+            </p>
+        </div>
     </div>
 </section>
 {% endblock %}

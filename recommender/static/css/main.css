@@ -173,7 +173,7 @@ ul {
     align-items: center;
 }
 
-.hero-text h1 {
+.hero-text h1, legend {
     font-size: 2.8rem;
     margin-bottom: 1rem;
     line-height: 1.15;
