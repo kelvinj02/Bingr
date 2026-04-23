@@ -7,7 +7,9 @@
     <div class="container auth-container">
         <div class="auth-card">
             <h1>Create Account</h1>
-            <p class="auth-subtext">Join BinGr and get personalized recommendations on your favorite books and movies</p>
+            <p class="auth-subtext">
+                Join BinGr and get personalized recommendations on your favorite books and movies
+            </p>
 
             <form method="POST" class="auth-form">
                 {{ form.hidden_tag() }}
@@ -49,7 +51,7 @@
 
             <p class="auth-switch">
                 Already have an account?
-                <a href="login.html">Login</a>
+                <a href="{{ url_for('users.login') }}">Login</a>
             </p>
         </div>
     </div>
