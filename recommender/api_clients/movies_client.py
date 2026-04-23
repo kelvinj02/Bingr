@@ -14,7 +14,7 @@ TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
 GENRE_MAP = {
-    "mystery":          18,    # Drama (closest match)
+    "mystery":          18,    # Drama
     "sci-fi":           878,
     "fantasy":          14,
     "romance":          10749,
@@ -143,7 +143,7 @@ def get_movie_recommendations(
     results = []
     seen_ids = set()
 
-    # Strategy 1: find movies similar to the user's favorites
+    # find movies similar to the user's favorites
     for title in favorites[:2]:
         if len(results) >= max_results:
             break
@@ -156,7 +156,7 @@ def get_movie_recommendations(
                 seen_ids.add(item["id"])
                 results.append(_format_movie(item, genres, mood))
 
-    # Strategy 2: fill remaining slots via genre discovery
+    # fill remaining slots via genre discovery
     if len(results) < max_results and genres:
         genre_ids = _get_genre_ids(genres)
         if genre_ids:
@@ -166,7 +166,7 @@ def get_movie_recommendations(
                     seen_ids.add(item["id"])
                     results.append(_format_movie(item, genres, mood))
 
-    # Strategy 3: fallback to popular movies
+    # fill with to popular movies
     if not results:
         url = f"{TMDB_BASE_URL}/movie/popular"
         params = {"api_key": TMDB_API_KEY, "page": 1, "language": "en-US"}
