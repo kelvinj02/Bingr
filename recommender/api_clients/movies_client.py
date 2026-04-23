@@ -176,18 +176,3 @@ def get_movie_recommendations(
             results.append(_format_movie(item, genres, mood))
 
     return results
-
-
-# ── Quick test ────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    movies = get_movie_recommendations(
-        favorites=["Inception", "The Matrix"],
-        genres=["Sci-Fi", "Thriller"],
-        mood="mind-bending",
-        max_results=3,
-    )
-    for m in movies:
-        print(f"{m['title']} ({m['year']})")
-        print(f"  Rating: {m['rating']} | Genres: {', '.join(m['genres'])}")
-        print(f"  {m['description'][:120]}...")
-        print()
