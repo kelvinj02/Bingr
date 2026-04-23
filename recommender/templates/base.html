@@ -3,54 +3,17 @@
     <head>
         <meta charset = "utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        {% if title %}
-            <title>BinGr - {{ title }}</title>
-        {% else %}
-            <title>BinGr</title>
-        {% endif %}
-        <link rel="stylesheet" href = "{{url_for('static', filename='css/main.css')}}">
+        <title>BinGr</title>
+        <link rel="stylesheet" href = "style.css">
     </head>
     <body>
-    <header class = "site-header">
-        <nav class = "navbar container">
-            <a href ="{{url_for('main.home')}}" class = "logo">BinGr</a>
-            
-            <div class="nav-links">
-                <a href="{{url_for('main.home')}}">Home</a>
-                <a href="{{url_for('main.home')}}#discover">Discover</a>
-                <a href="{{url_for('main.home')}}#genres">Genres</a>
-                {% if current_user.is_authenticated%}
-                    <a href="{{ url_for('users.account') }}">Account</a>
-                    <a href="{{ url_for('users.logout') }}">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('users.login') }}">Login</a>
-                    <a href="{{ url_for('users.signup') }}">Sign Up</a>
-                {% endif%}    
+        <div class = "navbar">
+            <div class="navbar-container">
+            <a  href="index.html" class = "logo-container"><h1 class="logo">BinGr</h1></a>
+                  
             </div>
-
-
-
-        </nav>
-    </header>
-        
-    <main class="main-content">
-        <div class="container flash-wrap">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
         </div>
-
-        {% block content %}{% endblock content %}
-    </main>
-    <br>
-    <hr>
-    <br>
+     
     <footer class="site-footer">
         <div class ="container footer-content">
             <p>&copy; 2026 BinGr</p>
@@ -58,6 +21,6 @@
         </div>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="main.js"></script>
     </body>
 </html>
