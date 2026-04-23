@@ -71,7 +71,7 @@ def get_book_recommendations(
     favorites: list[str] = [],
     genres: list[str] = [],
     mood: Optional[str] = None,
-    max_results: int = 6,
+    max_results: int = 20,
 ) -> list[dict]:
     """
     Fetch book recommendations from the Google Books API.
@@ -131,18 +131,3 @@ def get_book_recommendations(
         })
 
     return results
-
-
-# ── Quick test ────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    books = get_book_recommendations(
-        favorites=["Gone Girl", "The Girl with the Dragon Tattoo"],
-        genres=["Thriller", "Crime"],
-        mood="dark & intense",
-        max_results=3,
-    )
-    for b in books:
-        print(f"{b['title']} ({b['year']}) — {', '.join(b['authors'])}")
-        print(f"  Rating: {b['rating']} | Pages: {b['page_count']}")
-        print(f"  {b['description'][:120]}...")
-        print()
