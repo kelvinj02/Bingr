@@ -90,7 +90,7 @@ def _discover_movies(genre_ids: list[int], max_results: int) -> list[dict]:
         "api_key":              TMDB_API_KEY,
         "with_genres":          ",".join(str(g) for g in genre_ids),
         "sort_by":              "vote_average.desc",
-        "vote_count.gte":       100,
+        "vote_count.gte":       20,
         "page":                 1,
         "language":             "en-US",
     }
