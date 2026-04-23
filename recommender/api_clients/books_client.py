@@ -9,7 +9,7 @@ import os
 import requests
 from typing import Optional
 
-GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY", "AIzaSyDTQ4yJLrYhkkSSJX70v6gp3hXO43mSl4I")
+GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 GOOGLE_BOOKS_BASE_URL = "https://www.googleapis.com/books/v1/volumes"
 
 GENRE_MAP = {
