@@ -23,6 +23,7 @@
                     {{ form.password.label(class="form-label") }}
                     {{ form.password(class="form-input", placeholder="Enter password") }}
                     {% for error in form.password.errors %}
+
                         <span class="form-error">{{ error }}</span>
                     {% endfor %}
                 </div>
