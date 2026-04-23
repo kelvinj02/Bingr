@@ -103,7 +103,6 @@ def _discover_movies(genre_ids: list[int], max_results: int) -> list[dict]:
 
 
 def _format_movie(item: dict, genres: list[str], mood: Optional[str]) -> dict:
-    """Normalise a TMDB movie object into Bingr's standard shape."""
     year = (item.get("release_date", "") or "")[:4] or None
     genre_names = genres[:2] if genres else ["Film"]
     poster = item.get("poster_path")
@@ -126,7 +125,7 @@ def get_movie_recommendations(
     favorites: list[str] = [],
     genres: list[str] = [],
     mood: Optional[str] = None,
-    max_results: int = 6,
+    max_results: int = 20,
 ) -> list[dict]:
     """
     Fetch movie recommendations from the TMDB API.
