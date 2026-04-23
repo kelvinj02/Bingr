@@ -1,26 +1,61 @@
 <!DOCTYPE html>
-<html lang ="en">
-    <head>
-        <meta charset = "utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <title>BinGr</title>
-        <link rel="stylesheet" href = "style.css">
-    </head>
-    <body>
-        <div class = "navbar">
-            <div class="navbar-container">
-            <a  href="index.html" class = "logo-container"><h1 class="logo">BinGr</h1></a>
-                  
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BinGr{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navbar container">
+            <a href="{{ url_for('main.home') }}" class="logo">BinGr</a>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.home') }}">Home</a></li>
+                <li><a href="{{ url_for('main.home') }}#discover">Discover</a></li>
+                <li><a href="{{ url_for('main.home') }}#genres">Genres</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('users.account') }}">Account</a></li>
+                {% endif %}
+            </ul>
+
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-btn" type="button">🌙</button>
+
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('users.logout') }}" class="btn btn-outline">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('users.login') }}" class="btn btn-outline">Login</a>
+                    <a href="{{ url_for('users.signup') }}" class="btn btn-primary">Sign Up</a>
+                {% endif %}
             </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="container flash-wrap">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
         </div>
-     
+
+        {% block content %}{% endblock %}
+    </main>
+
     <footer class="site-footer">
-        <div class ="container footer-content">
+        <div class="container footer-content">
             <p>&copy; 2026 BinGr</p>
-            <p>Movie Data from TMDB. Book Data from Google Books</p>
+            <p>Movie Data from TMDB. Book Data from Google Books.</p>
         </div>
     </footer>
 
-    <script src="main.js"></script>
-    </body>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
 </html>
