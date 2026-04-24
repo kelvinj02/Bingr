@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container auth-container">
+        <div class="auth-card">
+            <legend>Reset Password</legend>
+            <form method="POST" class="auth-form" action="">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.password.label(class="form-label") }}
+                    {% if form.password.errors %}
+                        {{ form.password(class="form-input is-invalid", placeholder="Enter password") }}
+                        {% for error in form.password.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.password(class="form-input", placeholder="Enter password") }}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.confirm_password.label(class="form-label") }}
+                    {% if form.confirm_password.errors %}
+                        {{ form.confirm_password(class="form-input is-invalid", placeholder="Confirm password") }}
+                        {% for error in form.confirm_password.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.confirm_password(class="form-input", placeholder="Confirm password") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary btn-full") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

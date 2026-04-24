@@ -20,14 +20,14 @@ class User(db.Model, UserMixin):
     #create a signer using a secret key with a 10 mins expiry
     #and return a token string 
     def get_reset_token(self, expires_sec=600):
-        s = Serializer(current_app.config['SECRET_KEY'], expires_sec)
-        return s.dumps({'user_id': self.id}).decode('utf-8')
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id}, salt='reset-password')
     
     @staticmethod
-    def verify_reset_token(token):
+    def verify_reset_token(token, expires_sec=600):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
-            user_id = s.loads(token)['user_id']
+            user_id = s.loads(token, salt='reset-password', max_age=expires_sec)['user_id']
         except:
             return None
         return User.query.get(user_id)

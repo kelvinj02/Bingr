@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container auth-container">
+        <div class="auth-card">
+            <legend>Reset Password</legend>
+            <form method="POST" class="auth-form" action="">
+                {{ form.hidden_tag() }}
+
+                <div class="form-group">
+                    {{ form.email.label(class="form-label") }}
+                    {% if form.email.errors %}
+                        {{ form.email(class="form-input is-invalid", placeholder="Enter email") }}
+                        {% for error in form.email.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.email(class="form-input", placeholder="Enter email") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary btn-full") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

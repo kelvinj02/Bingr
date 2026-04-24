@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
 
-
-
 {% block content %}
 <section class="auth-section">
     <div class="container auth-container">
@@ -11,42 +9,59 @@
                 Join BinGr and get personalized recommendations on your favorite books and movies
             </p>
 
-            <form method="POST" class="auth-form">
+            <form method="POST" class="auth-form" action="">
                 {{ form.hidden_tag() }}
 
                 <div class="form-group">
                     {{ form.username.label(class="form-label") }}
-                    {{ form.username(class="form-input", placeholder="Enter username") }}
-                    {% for error in form.username.errors %}
-                        <span class="form-error">{{ error }}</span>
-                    {% endfor %}
+                    {% if form.username.errors %}
+                        {{ form.username(class="form-input is-invalid", placeholder="Enter username") }}
+                        {% for error in form.username.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.username(class="form-input", placeholder="Enter username") }}
+                    {% endif %}
                 </div>
 
                 <div class="form-group">
                     {{ form.email.label(class="form-label") }}
-                    {{ form.email(class="form-input", placeholder="Enter email") }}
-                    {% for error in form.email.errors %}
-                        <span class="form-error">{{ error }}</span>
-                    {% endfor %}
+                    {% if form.email.errors %}
+                        {{ form.email(class="form-input is-invalid", placeholder="Enter email") }}
+                        {% for error in form.email.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.email(class="form-input", placeholder="Enter email") }}
+                    {% endif %}
                 </div>
 
                 <div class="form-group">
                     {{ form.password.label(class="form-label") }}
-                    {{ form.password(class="form-input", placeholder="Enter password") }}
-                    {% for error in form.password.errors %}
-                        <span class="form-error">{{ error }}</span>
-                    {% endfor %}
+                    {% if form.password.errors %}
+                        {{ form.password(class="form-input is-invalid", placeholder="Enter password") }}
+                        {% for error in form.password.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.password(class="form-input", placeholder="Enter password") }}
+                    {% endif %}
                 </div>
 
                 <div class="form-group">
                     {{ form.confirm_password.label(class="form-label") }}
-                    {{ form.confirm_password(class="form-input", placeholder="Confirm password") }}
-                    {% for error in form.confirm_password.errors %}
-                        <span class="form-error">{{ error }}</span>
-                    {% endfor %}
+                    {% if form.confirm_password.errors %}
+                        {{ form.confirm_password(class="form-input is-invalid", placeholder="Confirm password") }}
+                        {% for error in form.confirm_password.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.confirm_password(class="form-input", placeholder="Confirm password") }}
+                    {% endif %}
                 </div>
-
-                {{ form.submit(class="btn btn-primary btn-full") }}
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary btn-full") }}
+                </div>
             </form>
 
             <p class="auth-switch">
