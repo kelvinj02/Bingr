@@ -1,7 +1,7 @@
-from flask import render_template, url_for, flash, redirect, request, Blueprint
+from flask import render_template, url_for, flash, redirect, request, Blueprint, abort
 from flask_login import login_user, current_user, logout_user, login_required
 from recommender import db, bcrypt
-from recommender.models import User
+from recommender.models import User, WishListItem
 from recommender.users.forms import (RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm)
 from recommender.users.utils import send_reset_email
 users = Blueprint('users', __name__)
@@ -78,6 +78,46 @@ def reset_token(token):
 @users.route("/search")
 def search():
     return render_template('search_result.html', title='Search Result')
+
+#View Wishlist
+@users.route("/wishlist", methods=['GET'])
+@login_required
+def wishlist():
+    items = WishListItem.query.filter_by(user_id=current_user.id).all()
+    return render_template("wishlist.html", title="My Wishlist", items=items)
+
+#Add items to Wishlist
+@users.route("/wishlist/add/<item_type>/<item_id>", methods=['POST'])
+@login_required
+def add_to_wishlist(item_type, item_id):
+    if item_type not in ('movie', 'book'):
+        abort(404)
+    existing = WishListItem.query.filter_by(user_id=current_user.id, item_type=item_type, item_id=item_id).first()
+    if existing:
+        flash("Already in your wishlist.", "info")
+    else:
+        item= WishListItem(
+            user_id=current_user.id,
+            item_type=item_type,
+            item_id=item_id,
+            title=request.form.get('title')
+        )
+        db.session.add(item)
+        db.session.commit()
+        flash("Added to wishlist!", "success")
+    return redirect(url_for('details.detail', item_type=item_type, item_id=item_id))
+
+#Remove item from Wishlist
+@users.route("/wishlist/remove/<int:item_id>", methods=['POST'])
+@login_required
+def remove_wishlist(item_id):
+    item = WishListItem.query.get_or_404(item_id)
+    if item.user_id != current_user.id:
+        abort(403)
+    db.session.delete(item)
+    db.session.commit()
+    flash("Removed from wishlist.", "info")
+    return redirect(url_for('users.wishlist'))
 
 @users.route("/logout")
 def logout():
