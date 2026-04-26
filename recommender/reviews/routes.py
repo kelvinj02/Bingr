@@ -32,7 +32,7 @@ def comment(item_type, item_id):
     return render_template("comment.html", title="New Comment", form=form)
 
 #Update comment
-@reviews.route("comment/<int:comment_id>/update", methods=['GET', 'POST'])
+@reviews.route("/comment/<int:comment_id>/update", methods=['GET', 'POST'])
 @login_required
 def update_comment(comment_id):
     comment= Comment.query.get_or_404(comment_id)
@@ -51,7 +51,7 @@ def update_comment(comment_id):
     return render_template("comment.html", title="Update Comment", form=form)
 
 #Delete comment
-@reviews.route("comment/<int:comment_id>/delete", methods=['POST'])
+@reviews.route("/comment/<int:comment_id>/delete", methods=['POST'])
 @login_required
 def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
