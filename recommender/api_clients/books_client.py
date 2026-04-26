@@ -68,8 +68,8 @@ def _build_query(
 
 
 def get_book_recommendations(
-    favorites: list[str] = [],
-    genres: list[str] = [],
+    favorites: list[str] = None,
+    genres: list[str] = None,
     mood: Optional[str] = None,
     max_results: int = 20,
 ) -> list[dict]:
@@ -86,6 +86,8 @@ def get_book_recommendations(
         List of dicts with keys: title, authors, year, genres,
         description, rating, thumbnail, info_link.
     """
+    favorites= favorites or []
+    genres=genres or []
     query = _build_query(favorites, genres, mood)
 
     params = {
@@ -96,11 +98,15 @@ def get_book_recommendations(
         "langRestrict":"en",
         "key":         GOOGLE_BOOKS_API_KEY,
     }
+    
+    #(fixed) error handling (try, except)
+    try:
+        response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+    except Exception:
+        return []
 
-    response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
-    response.raise_for_status()
-
-    data = response.json()
     items = data.get("items", [])
 
     if not items:
@@ -117,6 +123,7 @@ def get_book_recommendations(
         ) or "No description available."
 
         results.append({
+            "id":   item.get("id"),
             "title":       info.get("title", "Unknown Title"),
             "authors":     info.get("authors", ["Unknown Author"]),
             "year":        (info.get("publishedDate", "") or "")[:4] or None,
@@ -131,3 +138,34 @@ def get_book_recommendations(
         })
 
     return results
+
+
+def get_book(book_id: str) -> Optional[dict]:
+    url = f"{GOOGLE_BOOKS_BASE_URL}/{book_id}"
+    params = {"key": GOOGLE_BOOKS_API_KEY}
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        item = response.json()
+        info = item.get("volumeInfo", {})
+        image_links = info.get("imageLinks", {})
+        raw_description = info.get("description", "")
+        clean_description = (
+            raw_description[:300] + "..." if len(raw_description) > 300 else raw_description
+        ) or "No description available."
+        return {
+            "id":          item.get("id"),
+            "title":       info.get("title", "Unknown Title"),
+            "authors":     info.get("authors", ["Unknown Author"]),
+            "year":        (info.get("publishedDate", "") or "")[:4] or None,
+            "genres":      info.get("categories", [])[:2],
+            "description": clean_description,
+            "rating":      info.get("averageRating"),
+            "rating_count":info.get("ratingsCount"),
+            "thumbnail":   image_links.get("thumbnail") or image_links.get("smallThumbnail"),
+            "info_link":   info.get("infoLink"),
+            "page_count":  info.get("pageCount"),
+            "language":    info.get("language"),
+        }
+    except Exception:
+        return None

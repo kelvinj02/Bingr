@@ -14,7 +14,7 @@ TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
 GENRE_MAP = {
-    "mystery":          18,    # Drama
+    "mystery":          9648,    # Mystery
     "sci-fi":           878,
     "fantasy":          14,
     "romance":          10749,
@@ -108,6 +108,7 @@ def _format_movie(item: dict, genres: list[str], mood: Optional[str]) -> dict:
     poster = item.get("poster_path")
 
     return {
+        "id": str(item.get("id")),
         "title":       item.get("title", "Unknown Title"),
         "year":        year,
         "genres":      genre_names,
@@ -122,8 +123,8 @@ def _format_movie(item: dict, genres: list[str], mood: Optional[str]) -> dict:
 
 
 def get_movie_recommendations(
-    favorites: list[str] = [],
-    genres: list[str] = [],
+    favorites: list[str] = None,
+    genres: list[str] = None,
     mood: Optional[str] = None,
     max_results: int = 20,
 ) -> list[dict]:
@@ -140,6 +141,8 @@ def get_movie_recommendations(
         List of dicts with keys: title, year, genres, description,
         rating, rating_count, thumbnail, info_link, language, popularity.
     """
+    favorites = favorites or []
+    genres = genres or []
     results = []
     seen_ids = set()
 
@@ -166,13 +169,27 @@ def get_movie_recommendations(
                     seen_ids.add(item["id"])
                     results.append(_format_movie(item, genres, mood))
 
-    # fill with to popular movies
+    # fall back to popular movies
     if not results:
-        url = f"{TMDB_BASE_URL}/movie/popular"
-        params = {"api_key": TMDB_API_KEY, "page": 1, "language": "en-US"}
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        for item in response.json().get("results", [])[:max_results]:
-            results.append(_format_movie(item, genres, mood))
+        try:
+            url = f"{TMDB_BASE_URL}/movie/popular"
+            params = {"api_key": TMDB_API_KEY, "page": 1, "language": "en-US"}
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            for item in response.json().get("results", [])[:max_results]:
+                results.append(_format_movie(item, genres, mood))
+        except Exception:
+            return []
 
     return results
+
+def get_movie(movie_id: str) -> Optional[dict]:
+    url=f"{TMDB_BASE_URL}/movie/{movie_id}"
+    params={"api_key": TMDB_API_KEY, "language": "en-US"}
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        item=response.json()
+        return _format_movie(item, [], None)
+    except Exception:
+        return None
