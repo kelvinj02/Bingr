@@ -14,7 +14,7 @@ class User(db.Model, UserMixin):
     username=db.Column(db.String(20), unique=True, nullable=False)
     email=db.Column(db.String(120), unique=True, nullable=False)
     password=db.Column(db.String(60), nullable=False)
-    #comments=db.relationship('Comment', backref='author', lazy=True)
+    comments=db.relationship('Comment', backref='author', lazy=True)
     #wishlist=db.relationship('WishListItem', backref='author', lazy=True)
 
     #create a signer using a secret key with a 10 mins expiry
@@ -35,12 +35,18 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"User('{self.username}', '{self.email}')"    
     
-# class Comment(db.Model):
-#     __tablename__= 'comments'
-#     id=db.Column(db.Integer, primary_key=True)
-#     user_id=db.Column(db.Integer, db.ForeignKey('id'), nullable=False)
-#     content=db.Column(db.Text, nullable=False)
-#     created_at=db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+class Comment(db.Model):
+    __tablename__= 'comments'
+    id=db.Column(db.Integer, primary_key=True)
+    user_id=db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    item_type=db.Column(db.String(10), nullable=False)   # 'movie' or 'book'
+    item_id = db.Column(db.String(50), nullable=False)   # external API ID
+    review_score=db.Column(db.Float, nullable=False)
+    content=db.Column(db.Text, nullable=False)
+    created_at=db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"Comment('{self.item_type}', '{self.item_id}', score={self.review_score})"
 
 # class WishListItem(db.Model):
 #     __tablename__= 'wishlist_items'

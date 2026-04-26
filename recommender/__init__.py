@@ -24,9 +24,11 @@ def create_app(config_class=Config):
     from recommender.users.routes import users
     from recommender.reviews.routes import reviews
     from recommender.main.routes import main
+    from recommender.details.routes import details
     app.register_blueprint(users)
     app.register_blueprint(reviews)
     app.register_blueprint(main)
+    app.register_blueprint(details)
     with app.app_context():
         db.create_all()
     return app
