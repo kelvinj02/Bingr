@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+    <form method="POST" class="auth-form" action="">
+        {{ form.hidden_tag() }}
+        <legend>Account Info</legend>
+        <div class="form-group">
+            {{ form.username.label(class="form-label") }}
+            {% if form.username.errors %}
+                {{ form.username(class="form-input is-invalid", placeholder="Enter username") }}
+                {% for error in form.username.errors %}
+                    <span class="form-error">{{ error }}</span>
+                {% endfor %}
+            {% else %}
+                {{ form.username(class="form-input", placeholder="Enter username") }}
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.email.label(class="form-label") }}
+            {% if form.email.errors %}
+                {{ form.email(class="form-input is-invalid", placeholder="Your email") }}
+                {% for error in form.email.errors %}
+                    <span class="form-error">{{ error }}</span>
+                {% endfor %}
+            {% else %}
+                {{ form.email(class="form-input", placeholder="Your email") }}
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.submit(class="btn btn-outline-info") }}
+        </div>
+    </form>
+{% endblock content %}

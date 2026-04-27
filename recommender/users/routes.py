@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, Blueprint,
 from flask_login import login_user, current_user, logout_user, login_required
 from recommender import db, bcrypt
 from recommender.models import User, WishListItem
-from recommender.users.forms import (RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm)
+from recommender.users.forms import (RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, UpdateAccountForm)
 from recommender.users.utils import send_reset_email
 users = Blueprint('users', __name__)
 
@@ -36,10 +36,20 @@ def login():
             flash("Login Unsuccessful. Please check email and password", "danger")
     return render_template("login.html", title="Login", form=form)
 
-@users.route("/account")
+@users.route("/account", methods=['GET', 'POST'])
 @login_required
 def account():
-    return render_template("account.html", title="account")
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('Your account has been updated!', 'success')
+        return redirect(url_for('users.account'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    return render_template('account.html', title='Account', form=form)
 
 #the route where the users enter their email to request to reset password
 @users.route("/reset_password", methods=['GET', 'POST'])
@@ -50,8 +60,11 @@ def reset_request():
     form=RequestResetForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        send_reset_email(user)
-        flash('Check your email to reset your password.', 'info')
+        try:
+            send_reset_email(user)
+            flash('Check your email to reset your password.', 'info')
+        except Exception as e:
+            flash(f'Email failed: {e}', 'danger')
         return redirect(url_for('users.login'))
     return render_template('reset_request.html', title="Reset Password", form=form)
 
