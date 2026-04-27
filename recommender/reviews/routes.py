@@ -23,12 +23,12 @@ def comment(item_type, item_id):
                 item_type=item_type,
                 item_id=item_id,
                 review_score=form.review_score.data,
-                content=form.content.data
+                content=form.body.data
             )
             db.session.add(new_comment)
             db.session.commit()
             flash("Your review has been posted!", "success")
-            return redirect(url_for('details.detail'))
+            return redirect(url_for('details.detail', item_type=item_type, item_id=item_id))
     return render_template("comment.html", title="New Comment", form=form)
 
 #Update comment
@@ -44,7 +44,7 @@ def update_comment(comment_id):
         comment.content = form.content.data
         db.session.commit()
         flash("Your review has been updated!", "success")
-        return redirect(url_for('details.detail'))
+        return redirect(url_for('details.detail', item_type=comment.item_type, item_id=comment.item_id))
     elif request.method == 'GET':
         form.review_score.data = comment.review_score
         form.content.data = comment.content
@@ -57,7 +57,9 @@ def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
     if comment.user_id != current_user.id:
         abort(403)
+    item_type = comment.item_type
+    item_id = comment.item_id
     db.session.delete(comment)
     db.session.commit()
     flash("Your review has been deleted.", "info")
-    return redirect(url_for('details.detail'))
+    return redirect(url_for('details.detail', item_type=item_type, item_id=item_id))

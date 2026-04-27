@@ -25,10 +25,12 @@ def create_app(config_class=Config):
     from recommender.reviews.routes import reviews
     from recommender.main.routes import main
     from recommender.details.routes import details
+    from recommender.errors.handlers import errors
     app.register_blueprint(users)
     app.register_blueprint(reviews)
     app.register_blueprint(main)
     app.register_blueprint(details)
+    app.register_blueprint(errors)
     with app.app_context():
         db.create_all()
     return app
