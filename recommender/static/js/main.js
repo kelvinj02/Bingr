@@ -1,7 +1,4 @@
-function myFunction() {
-  var element = document.body;
-  element.classList.toggle("theme-btn");
-} //sample function for dark-light mode// ── theme toggle ─────────────────────────────────────────────────────────
+// ── theme toggle ─────────────────────────────────────────────────────────
 const THEME_KEY = 'reel-reads-theme';
 
 function applyTheme(theme) {

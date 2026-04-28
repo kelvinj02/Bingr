@@ -1,78 +1,108 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 <section class="hero">
-    <div class="container">
-    <span class="hero-eyebrow">Movies &amp; Books · Curated for you</span>
-    <h1>Your next favourite<br><em>starts here.</em></h1>
-    <p class="hero-sub">Discover top-rated movies and books, track what you want to watch or read, and share your reviews.</p>
+  <div class="container hero-content">
+    <div class="hero-text">
+      <span class="hero-eyebrow">Movies &amp; Books · Curated for you</span>
+      <h1>Your next favourite<br><em>starts here.</em></h1>
+      <p>Discover top-rated movies and books, track what you want to watch or read, and share your reviews.</p>
+      <div class="hero-buttons">
+        <a href="{{ url_for('main.top_recommendations') }}" class="btn btn-primary">Browse All</a>
+        {% if not current_user.is_authenticated %}
+          <a href="{{ url_for('users.signup') }}" class="btn btn-outline">Sign Up Free</a>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="quick-search">
-    <div class="container">
-        <h2>Search for books or movies</h2>
-        <form class="search-form">
-            <input type="text" placeholder="Search by title, author, or director">
-            <select>
-                <option value="">All</option>
-                <option value="movie">Movies</option>
-                <option value="book">Books</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Search</button>
-        </form>
+<!-- Recommendations carousel -->
+<section class="carousel-section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Recommendations</h2>
+      <a href="{{ url_for('main.top_recommendations') }}?type=book" class="view-all">View all →</a>
     </div>
+
+    {% if current_user.is_authenticated and preview_books %}
+      <div class="carousel">
+        {% for book in preview_books %}
+        <a href="{{ url_for('books.detail', title=book.title | url_encode_title) }}" class="carousel-card">
+          <div class="carousel-cover book-cover-placeholder">{{ book.title[:2].upper() }}</div>
+          <div class="carousel-title">{{ book.title[:35] }}{% if book.title|length > 35 %}…{% endif %}</div>
+          <div class="carousel-sub">{{ book.author }}</div>
+          <div class="carousel-rating">★ {{ "%.1f"|format(book.avg_rating) }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    {% elif not current_user.is_authenticated %}
+      <div class="carousel-cta">
+        <p>Sign up to get personalized recommendations based on your taste.</p>
+        <a href="{{ url_for('users.signup') }}" class="btn btn-primary">Get Started</a>
+      </div>
+    {% else %}
+      <p class="empty-msg">No recommendations yet. <a href="{{ url_for('users.onboarding') }}">Set your preferences</a> to get started.</p>
+    {% endif %}
+  </div>
 </section>
 
-
-
-<section class="genres">
-    <div class="container">
-        <h2>Browse by Genre</h2>
-        <div class="genre-list">
-            <a href="#" class="genre-pill">Action</a>
-            <a href="#" class="genre-pill">Fantasy</a>
-            <a href="#" class="genre-pill">Romance</a>
-            <a href="#" class="genre-pill">Sci-Fi</a>
-            <a href="#" class="genre-pill">Mystery</a>
-            <a href="#" class="genre-pill">Horror</a>
-            <a href="#" class="genre-pill">Comedy</a>
-            <a href="#" class="genre-pill">Drama</a>
-        </div>
+<!-- Trending carousel -->
+<section class="carousel-section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Trending</h2>
+      <a href="{{ url_for('main.top_recommendations') }}?type=movie" class="view-all">View all →</a>
     </div>
+
+    {% if preview_movies %}
+      <div class="carousel">
+        {% for movie in preview_movies %}
+        <a href="{{ url_for('movies.detail', title=movie.title | url_encode_title) }}" class="carousel-card">
+          <div class="carousel-cover movie-cover-placeholder">{{ movie.title[:2].upper() }}</div>
+          <div class="carousel-title">{{ movie.title[:35] }}{% if movie.title|length > 35 %}…{% endif %}</div>
+          <div class="carousel-sub">{{ movie.overview[:60] }}{% if movie.overview|length > 60 %}…{% endif %}</div>
+        </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-msg">No trending titles available right now.</p>
+    {% endif %}
+  </div>
 </section>
 
 <section class="features">
-    <div class="container">
-        <h2>Why use BinGr?</h2>
-        <div class="feature-grid">
-            <div class="feature-box">
-                <h3>Smart Recommendations</h3>
-                <p>Get suggestions based on what you already enjoy.</p>
-            </div>
-            <div class="feature-box">
-                <h3>Save for Later</h3>
-                <p>Keep track of books and movies you want to revisit.</p>
-            </div>
-            <div class="feature-box">
-                <h3>Rate and Comment</h3>
-                <p>Share opinions and help others discover great content.</p>
-            </div>
-        </div>
+  <div class="container">
+    <h2>Why use BinGr?</h2>
+    <div class="feature-grid">
+      <div class="feature-box">
+        <h3>Smart Recommendations</h3>
+        <p>Get suggestions based on what you already enjoy.</p>
+      </div>
+      <div class="feature-box">
+        <h3>Save for Later</h3>
+        <p>Keep track of books and movies you want to revisit.</p>
+      </div>
+      <div class="feature-box">
+        <h3>Rate and Review</h3>
+        <p>Share opinions and help others discover great content.</p>
+      </div>
     </div>
+  </div>
 </section>
 
 {% if not current_user.is_authenticated %}
 <section class="section">
-  <div class="container" style="text-align:center;max-width:540px;margin:0 auto;">
-    <h2 style="margin-bottom:12px;">Rate, review &amp; save</h2>
-    <p style="color:var(--text2);margin-bottom:28px;">Create a free account to rate titles, write reviews, and build your personal watchlist.</p>
-    <div style="display:flex;gap:12px;justify-content:center;">
+  <div class="container cta-content">
+    <h2>Rate, review &amp; save</h2>
+    <p>Create a free account to rate titles, write reviews, and build your personal watchlist.</p>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:1rem;">
       <a href="{{ url_for('users.signup') }}" class="btn btn-primary">Get started</a>
       <a href="{{ url_for('users.login') }}" class="btn btn-outline">Log in</a>
     </div>
   </div>
 </section>
 {% endif %}
-{% endblock content %}
 
+{% endblock content %}

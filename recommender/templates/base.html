@@ -13,12 +13,18 @@
 
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.home') }}">Home</a></li>
-                <li><a href="">Top Recommendations</a></li>
+                <li><a href="{{ url_for('main.top_recommendations') }}">Top Recommendations</a></li>
                 {% if current_user.is_authenticated %}
                     <li><a href="{{ url_for('users.account') }}">Account</a></li>
-                    <li><a href="{{ url_for('users.wishlist') }}">WishList</a></li>
+                    <li><a href="{{ url_for('users.wishlist') }}">Wishlist</a></li>
                 {% endif %}
             </ul>
+
+            <form class="nav-search" action="{{ url_for('main.search') }}" method="get">
+                <input type="text" name="q" placeholder="Search movies &amp; books…" autocomplete="off">
+                <input type="hidden" name="type" value="all">
+                <button type="submit">🔍</button>
+            </form>
 
             <div class="nav-actions">
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
@@ -56,7 +62,7 @@
     <footer class="footer">
   <div class="container">
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;flex-wrap:wrap;gap:12px;">
-      <span>© 2025 BinGr</span>
+      <span>© 2026 BinGr</span>
       <span style="color:var(--text3)">Powered by TMDB &amp; Google Books</span>
     </div>
   </div>
