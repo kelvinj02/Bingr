@@ -1,10 +1,3 @@
-"""
-recommender/api_clients/books_client.py
-
-Google Books API client for Bingr.
-Fetches book recommendations based on titles, genres, and mood.
-"""
-
 import os
 import requests
 from typing import Optional

@@ -2,3 +2,18 @@
 __pycache__/
 .venv/
 instance/
+
+# AI tool directories
+.claude/
+.agents/
+.superpowers/
+.vscode/
+skills-lock.json
+docs/superpowers/
+
+# Large data files
+*.csv
+*.pkl
+
+# Jupyter notebooks
+*.ipynb

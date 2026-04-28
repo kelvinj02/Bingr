@@ -1,7 +1,7 @@
-from flask import render_template, url_for, flash, redirect, request, Blueprint, abort
+from flask import render_template, url_for, flash, redirect, request, Blueprint, abort, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from recommender import db, bcrypt
-from recommender.models import User, WishListItem
+from recommender.models import User, WishListItem, UserPreference
 from recommender.users.forms import (RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, UpdateAccountForm)
 from recommender.users.utils import send_reset_email
 users = Blueprint('users', __name__)
@@ -18,7 +18,8 @@ def signup():
         db.session.add(user)    #adding user to database
         db.session.commit()     #commit change in database
         flash("Your account has been created successfully!", "success")
-        return redirect(url_for('users.login'))
+        login_user(user)
+        return redirect(url_for('users.onboarding'))
     return render_template("register.html", title="Sign Up", form=form)
 
 @users.route("/login", methods=['GET', 'POST'])
@@ -88,9 +89,28 @@ def reset_token(token):
         return redirect(url_for('users.login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
-@users.route("/search")
-def search():
-    return render_template('search_result.html', title='Search Result')
+@users.route("/onboarding", methods=['GET', 'POST'])
+@login_required
+def onboarding():
+    if request.args.get('skip'):
+        return redirect(url_for('main.home'))
+
+    if request.method == 'POST':
+        selected_genres = request.form.getlist('genres')
+        raw_authors = request.form.get('authors', '').strip()
+        authors = [a.strip() for a in raw_authors.split(',') if a.strip()]
+
+        UserPreference.query.filter_by(user_id=current_user.id).delete()
+        for genre in selected_genres:
+            db.session.add(UserPreference(user_id=current_user.id, pref_type='genre', value=genre))
+        for author in authors:
+            db.session.add(UserPreference(user_id=current_user.id, pref_type='author', value=author))
+        db.session.commit()
+        return redirect(url_for('main.home'))
+
+    genres = current_app.recommender.genres
+    return render_template('onboarding.html', title='Set Your Preferences', genres=genres)
+
 
 #View Wishlist
 @users.route("/wishlist", methods=['GET'])

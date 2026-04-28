@@ -3,6 +3,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from flask import current_app
+from sqlalchemy import UniqueConstraint, CheckConstraint
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -32,9 +33,68 @@ class User(db.Model, UserMixin):
             return None
         return User.query.get(user_id)
 
+    preferences = db.relationship('UserPreference', backref='user', lazy=True, cascade='all, delete-orphan')
+    books = db.relationship('UserBook', backref='user', lazy=True, cascade='all, delete-orphan')
+    movies = db.relationship('UserMovie', backref='user', lazy=True, cascade='all, delete-orphan')
+
     def __repr__(self):
-        return f"User('{self.username}', '{self.email}')"    
-    
+        return f"User('{self.username}', '{self.email}')"
+
+
+class UserPreference(db.Model):
+    __tablename__ = 'user_preferences'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    pref_type = db.Column(db.String(10), nullable=False)
+    value = db.Column(db.String(100), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'pref_type', 'value', name='uq_user_pref'),
+        CheckConstraint("pref_type IN ('genre', 'author')", name='ck_pref_type'),
+    )
+
+    def __repr__(self):
+        return f"UserPreference('{self.pref_type}', '{self.value}')"
+
+
+class UserBook(db.Model):
+    __tablename__ = 'user_books'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    book_title = db.Column(db.String(300), nullable=False)
+    status = db.Column(db.String(10), nullable=False)
+    rating = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'book_title', name='uq_user_book'),
+        CheckConstraint("status IN ('read', 'saved')", name='ck_book_status'),
+        CheckConstraint('rating IS NULL OR (rating >= 1 AND rating <= 5)', name='ck_book_rating'),
+    )
+
+    def __repr__(self):
+        return f"UserBook('{self.book_title}', '{self.status}', rating={self.rating})"
+
+
+class UserMovie(db.Model):
+    __tablename__ = 'user_movies'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    movie_title = db.Column(db.String(300), nullable=False)
+    status = db.Column(db.String(10), nullable=False)
+    rating = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'movie_title', name='uq_user_movie'),
+        CheckConstraint("status IN ('watched', 'saved')", name='ck_movie_status'),
+        CheckConstraint('rating IS NULL OR (rating >= 1 AND rating <= 5)', name='ck_movie_rating'),
+    )
+
+    def __repr__(self):
+        return f"UserMovie('{self.movie_title}', '{self.status}', rating={self.rating})"
+
+
 class Comment(db.Model):
     __tablename__= 'comments'
     id=db.Column(db.Integer, primary_key=True)

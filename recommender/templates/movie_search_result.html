@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="search-header">
+        <h1>Movie search results</h1>
+        <p class="search-count">{{ movies | length }} result{% if movies | length != 1 %}s{% endif %} for "{{ query }}"</p>
+    </div>
+
+    <form class="search-bar-wrap" action="{{ url_for('movies.search') }}" method="GET">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by movie title" autofocus>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    {% if movies %}
+    <div class="search-list">
+        {% for movie in movies %}
+        <div class="search-item">
+            {% if movie.poster_url %}
+            <img src="{{ movie.poster_url }}" class="search-item-cover" alt="{{ movie.title }}" style="object-fit:cover;">
+            {% else %}
+            <div class="search-item-cover"></div>
+            {% endif %}
+            <div class="search-item-info">
+                <div class="search-item-title">{{ movie.title }}</div>
+                <div class="search-item-meta">{{ movie.overview[:120] }}{% if movie.overview | length > 120 %}…{% endif %}</div>
+            </div>
+            <div class="search-item-actions">
+                {% if current_user.is_authenticated %}
+                <button class="btn-sm btn-save interact-btn"
+                        data-title="{{ movie.title }}"
+                        data-action="save">
+                    {% if movie.user_status == 'saved' %}Saved ✓{% elif movie.user_status == 'watched' %}Watched ✓{% else %}+ Save{% endif %}
+                </button>
+                {% endif %}
+                <a href="{{ url_for('movies.detail', title=movie.title | url_encode_title) }}" class="btn-sm btn-read" style="text-align:center;">View</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--muted-text);margin-top:2rem;">No movies found for "{{ query }}". Try a different search term.</p>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.interact-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const res = await fetch('/movies/interact', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({title: btn.dataset.title, action: btn.dataset.action})
+        });
+        const data = await res.json();
+        if (!data.ok) return;
+        if (data.status === 'saved') btn.textContent = 'Saved ✓';
+        else if (data.status === 'removed') btn.textContent = '+ Save';
+        else if (data.status === 'watched') btn.textContent = 'Watched ✓';
+    });
+});
+</script>
+{% endblock %}

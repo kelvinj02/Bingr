@@ -1,10 +1,3 @@
-"""
-recommender/api_clients/movies_client.py
-
-TMDB (The Movie Database) API client for Bingr.
-Fetches movie recommendations based on titles, genres, and mood.
-"""
-
 import os
 import requests
 from typing import Optional

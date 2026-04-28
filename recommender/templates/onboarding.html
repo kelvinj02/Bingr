@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="onboarding-section">
+    <div class="onboarding-card">
+        <h1>What do you like to read?</h1>
+        <p class="subtitle">Pick at least one genre. You can always update this from your account.</p>
+
+        <form method="POST">
+            <div class="genre-grid">
+                {% for genre in genres %}
+                <label class="genre-pill-label">
+                    <input type="checkbox" name="genres" value="{{ genre }}">
+                    {{ genre }}
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="authors">Favorite authors <span style="font-weight:400;color:var(--muted-text);">(optional, comma-separated)</span></label>
+                <input class="form-input" type="text" id="authors" name="authors" placeholder="e.g. Tolkien, Agatha Christie">
+            </div>
+
+            <div class="onboarding-footer">
+                <button type="submit" class="btn btn-primary">Get my recommendations →</button>
+                <a href="{{ url_for('users.onboarding') }}?skip=1" class="skip-link">Skip for now</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+document.querySelectorAll('.genre-pill-label').forEach(label => {
+    label.addEventListener('click', () => {
+        label.classList.toggle('selected');
+    });
+});
+</script>
+{% endblock %}
