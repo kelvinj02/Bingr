@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% block title %}Log In — BinGr{% endblock %}
 {% block content %}
 <section class="auth-section">
     <div class="container auth-container">
@@ -14,6 +14,7 @@
 
                 <div class="form-group">
                     {{ form.email.label(class="form-label") }}
+                    {{ form.email(placeholder="you@email.com", autocomplete="email") }}
                     {% if form.email.errors %}
                         {{ form.email(class="form-input is-invalid", placeholder="Enter email") }}
                         {% for error in form.email.errors %}
