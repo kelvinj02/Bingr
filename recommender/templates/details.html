@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }} — ReelReads{% endblock %}
+
+{% block content %}
+<div class="container">
+
+
+    <div>
+      <div class="detail-meta-row">
+        <span class="detail-badge">{{ item.type | capitalize }}</span>
+        {% if item.release_date %}
+          <span class="detail-badge">{{ item.release_date[:4] }}</span>
+        {% elif item.published_date %}
+          <span class="detail-badge">{{ item.published_date[:4] }}</span>
+        {% endif %}
+        {% if item.runtime %}
+          <span class="detail-badge">{{ item.runtime }} min</span>
+        {% endif %}
+        {% if item.page_count %}
+          <span class="detail-badge">{{ item.page_count }} pages</span>
+        {% endif %}
+        {% if item.rating %}
+          <span class="detail-badge">★ {{ "%.1f"|format(item.rating) }}</span>
+        {% endif %}
+      </div>
+
+      <h1 class="detail-title">{{ item.title }}</h1>
+
+      {% if item.tagline %}
+        <p class="detail-tagline">"{{ item.tagline }}"</p>
+      {% endif %}
+
+      {% if item.type == 'movie' and item.director %}
+        <p style="color:var(--text2);margin-bottom:8px;font-size:0.9rem;">
+          Directed by <strong>{{ item.director }}</strong>
+        </p>
+      {% endif %}
+      {% if item.type == 'book' and item.authors %}
+        <p style="color:var(--text2);margin-bottom:8px;font-size:0.9rem;">
+          By <strong>{{ item.authors | join(', ') }}</strong>
+        </p>
+      {% endif %}
+      {% if item.publisher %}
+        <p style="color:var(--text3);font-size:0.85rem;margin-bottom:16px;">Published by {{ item.publisher }}</p>
+      {% endif %}
+
+      {% if item.genres %}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;">
+          {% for g in item.genres %}
+          <span style="font-size:0.75rem;padding:3px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);">{{ g }}</span>
+          {% endfor %}
+        </div>
+      {% elif item.categories %}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;">
+          {% for c in item.categories %}
+          <span style="font-size:0.75rem;padding:3px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);">{{ c }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if item.overview %}
+        <p class="detail-overview">{{ item.overview }}</p>
+      {% endif %}
+
+      <div class="detail-actions">
+        <button class="btn btn-{{ 'primary' if in_wishlist else 'outline' }}"
+          id="detail-wishlist-btn"
+          data-item-id="{{ item.id }}"
+          data-item-type="{{ item.type }}"
+          data-title="{{ item.title }}"
+          data-poster-url="{{ item.poster_url or '' }}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          {{ 'In Watchlist' if in_wishlist else 'Add to Watchlist' }}
+        </button>
+        <a href="{{ url_for('main.top_recommendations') }}" class="btn btn-outline">← Back</a>
+      </div>
+    </div>
+  </div>
+
+</div>
