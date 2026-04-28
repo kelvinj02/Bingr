@@ -54,9 +54,9 @@ def detail(title):
     book = matches.iloc[0].to_dict()
     similar = current_app.recommender.get_similar(title, top_n=5)
     status, rating = _user_book_status(title)
-    from recommender.api_clients.books_client import get_book
-    cover_url = get_book(title)
-    return render_template('details.html', book=book, similar=similar,
+    from recommender.api_clients.books_client import get_book_cover
+    cover_url = get_book_cover(title)
+    return render_template('book_details.html', book=book, similar=similar,
                            user_status=status, user_rating=rating, cover_url=cover_url)
 
 

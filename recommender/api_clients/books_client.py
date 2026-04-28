@@ -162,3 +162,16 @@ def get_book(book_id: str) -> Optional[dict]:
         }
     except Exception:
         return None
+
+def get_book_cover(title: str) -> Optional[str]:
+    params = {"q": f'intitle:"{title}"', "maxResults": 1, "key": GOOGLE_BOOKS_API_KEY}
+    try:
+        response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
+        response.raise_for_status()
+        items = response.json().get("items", [])
+        if not items:
+            return None
+        links = items[0].get("volumeInfo", {}).get("imageLinks", {})
+        return links.get("thumbnail") or links.get("smallThumbnail")
+    except Exception:
+        return None
