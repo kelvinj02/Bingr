@@ -13,10 +13,10 @@
 
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.home') }}">Home</a></li>
-                <li><a href="{{ url_for('main.home') }}#discover">Discover</a></li>
-                <li><a href="{{ url_for('main.home') }}#genres">Genres</a></li>
+                <li><a href="">Top Recommendations</a></li>
                 {% if current_user.is_authenticated %}
                     <li><a href="{{ url_for('users.account') }}">Account</a></li>
+                    <li><a href="{{ url_for('users.wishlist') }}">WishList</a></li>
                 {% endif %}
             </ul>
 

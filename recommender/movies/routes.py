@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, abort,
 from flask_login import login_required, current_user
 from recommender import db
 from recommender.models import UserMovie
-from recommender.api_clients.movies_client import get_movie_poster
+from recommender.api_clients.movies_client import get_movie
 
 movies = Blueprint('movies', __name__, url_prefix='/movies')
 
@@ -27,7 +27,7 @@ def recommendations():
     interactions = _get_interactions()
     recs = current_app.movie_recommender.get_personalized(interactions, top_n=20)
     for movie in recs:
-        movie['poster_url'] = get_movie_poster(movie['movie_id'])
+        movie['poster_url'] = get_movie(movie['movie_id'])
     mode = "Based on your taste" if interactions else "Popular Movies"
     return render_template('movie_recommendations.html', movies=recs, mode=mode)
 

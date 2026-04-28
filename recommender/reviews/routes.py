@@ -41,13 +41,13 @@ def update_comment(comment_id):
     form= CommentForm()
     if form.validate_on_submit():
         comment.review_score = form.review_score.data
-        comment.content = form.content.data
+        comment.content = form.body.data
         db.session.commit()
         flash("Your review has been updated!", "success")
         return redirect(url_for('details.detail', item_type=comment.item_type, item_id=comment.item_id))
     elif request.method == 'GET':
         form.review_score.data = comment.review_score
-        form.content.data = comment.content
+        form.body.data = comment.content
     return render_template("comment.html", title="Update Comment", form=form)
 
 #Delete comment

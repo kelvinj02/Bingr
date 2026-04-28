@@ -6,19 +6,6 @@
     <span class="hero-eyebrow">Movies &amp; Books · Curated for you</span>
     <h1>Your next favourite<br><em>starts here.</em></h1>
     <p class="hero-sub">Discover top-rated movies and books, track what you want to watch or read, and share your reviews.</p>
-    <!-- search -->
-    <form class="search-wrap" action="{{ url_for('users.search') }}" method="get">
-      <div class="search-bar">
-        <input type="text" name="q" placeholder="Search movies, books, authors, directors…" autocomplete="off" required>
-        <input type="hidden" name="type" id="filter-type-input" value="all">
-        <button type="submit">Search</button>
-      </div>
-      <div class="filter-pills">
-        <button type="button" class="filter-pill active" data-value="all">All</button>
-        <button type="button" class="filter-pill" data-value="movie">Movies</button>
-        <button type="button" class="filter-pill" data-value="book">Books</button>
-      </div>
-    </form>
   </div>
 </section>
 

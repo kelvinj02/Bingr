@@ -1,4 +1,4 @@
-{%extends 'base.html'}
+{%extends 'base.html' %}
 {% block title %}My Account — BinGr {% endblock %}
 
 {% block content %}
@@ -8,9 +8,7 @@
     <div class="account-avatar">{{ current_user.username[0].upper() }}</div>
     <h1 style="font-size:1.8rem;">{{ current_user.username }}</h1>
     <p style="color:var(--text3);font-size:0.875rem;">{{ current_user.email }}</p>
-    <p style="color:var(--text3);font-size:0.8rem;margin-top:4px;">
-      Member since {{ current_user.created_at.strftime('%B %Y') }}
-    </p>
+    
     <div class="stats-row">
       <div class="stat-item">
         <div class="stat-num">{{ ratings|length }}</div>
@@ -20,25 +18,7 @@
         <div class="stat-num">{{ comments|length }}</div>
         <div class="stat-label">Reviews</div>
       </div>
-      <div class="stat-item">
-        <div class="stat-num">{{ wishlist_count }}</div>
-        <div class="stat-label">Watchlist</div>
-      </div>
     </div>
-  </div>
-
-
-
-
-  <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:80px;">
-    <h3 style="font-family:var(--font-body);font-weight:500;margin-bottom:8px;">Session</h3>
-    <p style="color:var(--text3);font-size:0.875rem;margin-bottom:16px;">You are currently logged in as {{ current_user.username }}.</p>
-    <a href="{{ url_for('main.logout') }}" class="btn btn-outline btn-sm">Log out</a>
-  </div>
-
-
-
-
-
-
 </div>
+</div>
+{% endblock content %}

@@ -11,3 +11,6 @@ WTForms
 itsdangerous
 Email-validator
 requests
+numpy
+pandas
+sklearn
