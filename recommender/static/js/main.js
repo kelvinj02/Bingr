@@ -1,21 +1,3 @@
-// ── giffgaff shake animation ──────────────────────────────────────────────
-function ggShake(btn) {
-  btn.classList.remove('btn--shake');
-  void btn.offsetWidth; // force reflow so animation restarts
-  btn.classList.add('btn--shake');
-  setTimeout(() => btn.classList.remove('btn--shake'), 600);
-}
-
-document.addEventListener('click', e => {
-  const btn = e.target.closest('.btn, .btn-save, .btn-read');
-  if (btn) ggShake(btn);
-});
-
-document.addEventListener('focusin', e => {
-  const btn = e.target.closest('.btn, .btn-save, .btn-read');
-  if (btn) ggShake(btn);
-});
-
 // ── theme toggle ─────────────────────────────────────────────────────────
 const THEME_KEY = 'reel-reads-theme';
 

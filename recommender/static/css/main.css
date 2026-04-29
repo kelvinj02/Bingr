@@ -165,16 +165,7 @@ ul {
 [data-theme="dark"] .ti-moon { color: #fff; }
 [data-theme="dark"] .ti-sun  { color: var(--muted-text); }
 
-/* ── giffgaff-style buttons ────────────────────────────────────────────── */
-@keyframes gg-shake {
-    0%   { transform: scale(1)    rotate(0deg); }
-    20%  { transform: scale(1.08) rotate(-3deg); }
-    40%  { transform: scale(1.06) rotate(3deg); }
-    60%  { transform: scale(1.04) rotate(-2deg); }
-    80%  { transform: scale(1.02) rotate(1deg); }
-    100% { transform: scale(1)    rotate(0deg); }
-}
-
+/* ── buttons ─────────────────────────────────────────────────────────── */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -191,10 +182,6 @@ ul {
     white-space: nowrap;
     transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
     -webkit-font-smoothing: antialiased;
-}
-
-.btn--shake {
-    animation: gg-shake 0.5s ease forwards;
 }
 
 .btn-primary {
@@ -465,7 +452,7 @@ ul {
 
 .flash {
     padding: 0.9rem 1rem;
-    border-radius: 12px;
+    border-radius: 15px;
     margin-bottom: 0.75rem;
     font-weight: 700;
 }
