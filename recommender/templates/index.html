@@ -3,47 +3,83 @@
 {% block content %}
 
 <section class="hero">
-  <div class="container hero-content">
-    <div class="hero-text">
-      <span class="hero-eyebrow">Movies &amp; Books · Curated for you</span>
-      <h1>Your next favourite<br><em>starts here.</em></h1>
-      <p>Discover top-rated movies and books, track what you want to watch or read, and share your reviews.</p>
-      <div class="hero-buttons">
-        <a href="{{ url_for('main.top_recommendations') }}" class="btn btn-primary">Browse All</a>
-        {% if not current_user.is_authenticated %}
-          <a href="{{ url_for('users.signup') }}" class="btn btn-outline">Sign Up Free</a>
-        {% endif %}
-      </div>
+  <div class="container">
+    <span class="hero-eyebrow">Movies &amp; Books · Curated for you</span>
+    <h1>Your next favourite<br><em>starts here.</em></h1>
+    <p style="color:var(--muted-text);max-width:520px;margin:1rem 0 1.5rem;">Discover top-rated movies and books, track what you want to watch or read, and share your reviews.</p>
+    <div class="hero-buttons">
+      <a href="{{ url_for('main.top_recommendations') }}" class="btn btn-primary">Browse All</a>
+      {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('users.signup') }}" class="btn btn-outline">Sign Up Free</a>
+      {% endif %}
     </div>
   </div>
 </section>
+
+<!-- shared macro for a single card -->
+{% macro render_card(item) %}
+  {% if item.kind == 'book' %}
+  <a href="{{ url_for('books.detail', title=item.title | url_encode_title) }}"
+     class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
+    <div class="browse-cover">
+      {% if item.thumbnail %}
+        <img src="{{ item.thumbnail }}" alt="{{ item.title }}"
+             style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
+      {% else %}
+        <div class="cover-initials book-placeholder">{{ item.title[:2].upper() }}</div>
+      {% endif %}
+    </div>
+    <div class="browse-title">{{ item.title[:35] }}{% if item.title|length > 35 %}…{% endif %}</div>
+    <div class="browse-type book-type">Book</div>
+    {% if item.rating %}
+      <div class="browse-rating">★ {{ "%.1f"|format(item.rating) }}</div>
+    {% endif %}
+  </a>
+  {% else %}
+  <a href="{{ url_for('movies.detail', title=item.title | url_encode_title) }}"
+     class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
+    <div class="browse-cover">
+      {% if item.poster_url %}
+        <img src="{{ item.poster_url }}" alt="{{ item.title }}"
+             style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div class="cover-initials movie-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
+      {% else %}
+        <div class="cover-initials movie-placeholder">{{ item.title[:2].upper() }}</div>
+      {% endif %}
+    </div>
+    <div class="browse-title">{{ item.title[:35] }}{% if item.title|length > 35 %}…{% endif %}</div>
+    <div class="browse-type movie-type">Movie</div>
+    {% if item.rating %}
+      <div class="browse-rating">★ {{ "%.1f"|format(item.rating) }}</div>
+    {% endif %}
+  </a>
+  {% endif %}
+{% endmacro %}
 
 <!-- Recommendations carousel -->
 <section class="carousel-section">
   <div class="container">
     <div class="section-head">
       <h2>Recommendations</h2>
-      <a href="{{ url_for('main.top_recommendations') }}?type=book" class="view-all">View all →</a>
+      <a href="{{ url_for('main.top_recommendations') }}" class="view-all">View all →</a>
     </div>
 
-    {% if current_user.is_authenticated and preview_books %}
-      <div class="carousel">
-        {% for book in preview_books %}
-        <a href="{{ url_for('books.detail', title=book.title | url_encode_title) }}" class="carousel-card">
-          <div class="carousel-cover book-cover-placeholder">{{ book.title[:2].upper() }}</div>
-          <div class="carousel-title">{{ book.title[:35] }}{% if book.title|length > 35 %}…{% endif %}</div>
-          <div class="carousel-sub">{{ book.author }}</div>
-          <div class="carousel-rating">★ {{ "%.1f"|format(book.avg_rating) }}</div>
-        </a>
-        {% endfor %}
+    {% if rec_items %}
+      <div class="carousel-wrapper">
+        <button class="carousel-arrow carousel-prev" onclick="scrollCarousel('rec', -1)">&#8592;</button>
+        <div class="carousel" id="carousel-rec">
+          {% for item in rec_items %}{{ render_card(item) }}{% endfor %}
+        </div>
+        <button class="carousel-arrow carousel-next" onclick="scrollCarousel('rec', 1)">&#8594;</button>
       </div>
-    {% elif not current_user.is_authenticated %}
+    {% else %}
       <div class="carousel-cta">
         <p>Sign up to get personalized recommendations based on your taste.</p>
         <a href="{{ url_for('users.signup') }}" class="btn btn-primary">Get Started</a>
       </div>
-    {% else %}
-      <p class="empty-msg">No recommendations yet. <a href="{{ url_for('users.onboarding') }}">Set your preferences</a> to get started.</p>
     {% endif %}
   </div>
 </section>
@@ -53,18 +89,16 @@
   <div class="container">
     <div class="section-head">
       <h2>Trending</h2>
-      <a href="{{ url_for('main.top_recommendations') }}?type=movie" class="view-all">View all →</a>
+      <a href="{{ url_for('main.top_recommendations') }}" class="view-all">View all →</a>
     </div>
 
-    {% if preview_movies %}
-      <div class="carousel">
-        {% for movie in preview_movies %}
-        <a href="{{ url_for('movies.detail', title=movie.title | url_encode_title) }}" class="carousel-card">
-          <div class="carousel-cover movie-cover-placeholder">{{ movie.title[:2].upper() }}</div>
-          <div class="carousel-title">{{ movie.title[:35] }}{% if movie.title|length > 35 %}…{% endif %}</div>
-          <div class="carousel-sub">{{ movie.overview[:60] }}{% if movie.overview|length > 60 %}…{% endif %}</div>
-        </a>
-        {% endfor %}
+    {% if trend_items %}
+      <div class="carousel-wrapper">
+        <button class="carousel-arrow carousel-prev" onclick="scrollCarousel('trend', -1)">&#8592;</button>
+        <div class="carousel" id="carousel-trend">
+          {% for item in trend_items %}{{ render_card(item) }}{% endfor %}
+        </div>
+        <button class="carousel-arrow carousel-next" onclick="scrollCarousel('trend', 1)">&#8594;</button>
       </div>
     {% else %}
       <p class="empty-msg">No trending titles available right now.</p>
@@ -93,7 +127,7 @@
 </section>
 
 {% if not current_user.is_authenticated %}
-<section class="section">
+<section class="section" style="padding:3rem 0;">
   <div class="container cta-content">
     <h2>Rate, review &amp; save</h2>
     <p>Create a free account to rate titles, write reviews, and build your personal watchlist.</p>
@@ -104,5 +138,21 @@
   </div>
 </section>
 {% endif %}
+
+<script>
+function scrollCarousel(id, direction) {
+  const carousel = document.getElementById('carousel-' + id);
+  const atStart = carousel.scrollLeft <= 0;
+  const atEnd   = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 1;
+
+  if (direction === -1 && atStart) {
+    carousel.scrollTo({ left: carousel.scrollWidth, behavior: 'smooth' });
+  } else if (direction === 1 && atEnd) {
+    carousel.scrollTo({ left: 0, behavior: 'smooth' });
+  } else {
+    carousel.scrollBy({ left: direction * 340, behavior: 'smooth' });
+  }
+}
+</script>
 
 {% endblock content %}

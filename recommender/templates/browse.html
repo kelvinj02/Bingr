@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Top Recommendations — BinGr{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:2rem;padding-bottom:3rem;">
+
+  <div class="section-head" style="margin-bottom:1.5rem;">
+    <h1 style="font-size:1.6rem;">Top Recommendations</h1>
+  </div>
+
+  <!-- Filter pills -->
+  <div class="filter-pills">
+    <button class="filter-pill active" data-filter="all">All</button>
+    <button class="filter-pill" data-filter="movie">Movies</button>
+    <button class="filter-pill" data-filter="book">Books</button>
+  </div>
+
+  <!-- Mixed grid -->
+  <div class="browse-grid" id="browse-grid">
+
+    {% for item in items %}
+      {% if item.kind == 'movie' %}
+      <a href="{{ url_for('movies.detail', title=item.title | url_encode_title) }}"
+         class="browse-card" data-type="movie" style="text-decoration:none;color:inherit;">
+        <div class="browse-cover">
+          {% if item.poster_url %}
+            <img src="{{ item.poster_url }}" alt="{{ item.title }}"
+                 style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="cover-initials movie-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
+          {% else %}
+            <div class="cover-initials movie-placeholder">{{ item.title[:2].upper() }}</div>
+          {% endif %}
+        </div>
+        <div class="browse-title">{{ item.title[:40] }}{% if item.title|length > 40 %}…{% endif %}</div>
+        <div class="browse-type movie-type">Movie</div>
+        {% if item.rating %}
+          <div class="browse-rating">★ {{ "%.1f"|format(item.rating) }}</div>
+        {% endif %}
+      </a>
+      {% else %}
+      <a href="{{ url_for('books.detail', title=item.title | url_encode_title) }}"
+         class="browse-card" data-type="book" style="text-decoration:none;color:inherit;">
+        <div class="browse-cover">
+          {% if item.thumbnail %}
+            <img src="{{ item.thumbnail }}" alt="{{ item.title }}"
+                 style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
+          {% else %}
+            <div class="cover-initials book-placeholder">{{ item.title[:2].upper() }}</div>
+          {% endif %}
+        </div>
+        <div class="browse-title">{{ item.title[:40] }}{% if item.title|length > 40 %}…{% endif %}</div>
+        <div class="browse-type book-type">Book</div>
+        {% if item.rating %}
+          <div class="browse-rating">★ {{ "%.1f"|format(item.rating) }}</div>
+        {% endif %}
+      </a>
+      {% endif %}
+    {% endfor %}
+
+  </div>
+
+  {% if not items %}
+    <div class="empty-state">
+      <h3>Nothing to show yet</h3>
+      <p>Try refreshing the page.</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<script>
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    const filter = pill.dataset.filter;
+    document.querySelectorAll('.browse-card').forEach(card => {
+      card.style.display = (filter === 'all' || card.dataset.type === filter) ? '' : 'none';
+    });
+  });
+});
+</script>
+{% endblock %}

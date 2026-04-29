@@ -47,15 +47,33 @@ def recommendations():
 
 @books.route('/books/<path:title>')
 def detail(title):
+    from recommender.api_clients.books_client import get_book_cover, get_book_recommendations
     df = current_app.recommender.df
     matches = df[df['Book'] == title]
+
     if matches.empty:
-        abort(404)
-    book = matches.iloc[0].to_dict()
-    similar = current_app.recommender.get_similar(title, top_n=5)
+        # title came from Google Books — fetch it from the API
+        results = get_book_recommendations(favorites=[title], max_results=1)
+        if not results:
+            abort(404)
+        raw = results[0]
+        authors = raw.get('authors', ['Unknown'])
+        book = {
+            'Book':       raw.get('title', title),
+            'Author':     ', '.join(authors) if isinstance(authors, list) else authors,
+            'Avg_Rating': raw.get('rating'),
+            'Description':raw.get('description', ''),
+            'Genres_Clean': ', '.join(raw.get('genres', [])),
+            'URL':        raw.get('info_link', ''),
+        }
+        similar = []
+        cover_url = raw.get('thumbnail')
+    else:
+        book = matches.iloc[0].to_dict()
+        similar = current_app.recommender.get_similar(title, top_n=5)
+        cover_url = get_book_cover(title)
+
     status, rating = _user_book_status(title)
-    from recommender.api_clients.books_client import get_book_cover
-    cover_url = get_book_cover(title)
     return render_template('book_details.html', book=book, similar=similar,
                            user_status=status, user_rating=rating, cover_url=cover_url)
 

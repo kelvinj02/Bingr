@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — BinGr{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="container auth-container">
+    <div class="auth-card">
+      <legend>{{ title }}</legend>
+      <p class="auth-subtext">Share your thoughts. Rating is out of 5.</p>
+
+      <form method="POST" class="auth-form" action="">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          {{ form.review_score.label(class="form-label") }}
+          {% if form.review_score.errors %}
+            {{ form.review_score(class="form-input is-invalid", placeholder="e.g. 4.5", step="0.5", min="0.5", max="5") }}
+            {% for error in form.review_score.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          {% else %}
+            {{ form.review_score(class="form-input", placeholder="e.g. 4.5", step="0.5", min="0.5", max="5") }}
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          {{ form.body.label(class="form-label") }}
+          {% if form.body.errors %}
+            {{ form.body(class="form-input is-invalid", placeholder="Write your review here…", rows=5, style="resize:vertical;") }}
+            {% for error in form.body.errors %}
+              <span class="form-error">{{ error }}</span>
+            {% endfor %}
+          {% else %}
+            {{ form.body(class="form-input", placeholder="Write your review here…", rows=5, style="resize:vertical;") }}
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          {{ form.submit(class="btn btn-primary btn-full") }}
+        </div>
+      </form>
+
+      <p class="auth-switch">
+        <a href="javascript:history.back()">← Cancel and go back</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

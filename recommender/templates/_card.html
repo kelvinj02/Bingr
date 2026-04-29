@@ -1,0 +1,8 @@
+<a href="{{ item.url }}" class="result-card" style="text-decoration:none;">
+  <span class="result-card-type">{{ item.type }}</span>
+  <div class="result-card-title">{{ item.title[:60] }}{% if item.title|length > 60 %}…{% endif %}</div>
+  <div class="result-card-sub">{{ item.subtitle[:80] }}{% if item.subtitle|length > 80 %}…{% endif %}</div>
+  {% if item.rating %}
+    <div style="font-size:0.78rem;color:#f59e0b;font-weight:600;margin-top:auto;">★ {{ "%.1f"|format(item.rating) }}</div>
+  {% endif %}
+</a>

@@ -555,6 +555,36 @@ ul {
     margin-bottom: 1rem;
 }
 
+.carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.carousel-arrow {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, border-color 0.2s;
+    z-index: 1;
+}
+
+.carousel-arrow:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
 .empty-msg {
     color: var(--muted-text);
     margin-top: 1rem;
@@ -707,6 +737,71 @@ ul {
 .empty-state h3 {
     margin: 1rem 0 0.5rem;
     color: var(--text-color);
+}
+
+/* ── browse grid ────────────────────────────────────────────────────────── */
+.browse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+}
+
+.browse-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    transition: transform 0.2s ease;
+}
+
+.browse-card:hover {
+    transform: translateY(-4px);
+}
+
+.browse-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--border);
+}
+
+.cover-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.movie-placeholder { background: linear-gradient(135deg, #f97316, #fb923c); }
+.book-placeholder  { background: linear-gradient(135deg, var(--primary), #b49cff); }
+
+.browse-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-color);
+}
+
+.browse-type {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.movie-type { color: #f97316; }
+.book-type  { color: var(--primary); }
+
+.browse-rating {
+    font-size: 0.78rem;
+    color: #f59e0b;
+    font-weight: 600;
 }
 
 /* ── footer ─────────────────────────────────────────────────────────────── */
