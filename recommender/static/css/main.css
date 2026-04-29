@@ -114,47 +114,163 @@ ul {
     gap: 0.75rem;
 }
 
-.theme-btn {
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    border-radius: 10px;
-    padding: 0.55rem 0.7rem;
+.theme-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--bg-color);
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
     cursor: pointer;
+    outline: none;
+    flex-shrink: 0;
+}
+
+.theme-toggle::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    border-radius: 999px;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .theme-toggle::before {
+    left: 33px; /* 3px padding + 28px icon + 2px gap */
+}
+
+.ti-sun, .ti-moon {
+    position: relative;
+    z-index: 1;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    transition: color 0.25s;
+    flex-shrink: 0;
+}
+
+/* Light mode: sun is active (white icon over purple pill) */
+[data-theme="light"] .ti-sun  { color: #fff; }
+[data-theme="light"] .ti-moon { color: var(--muted-text); }
+
+/* Dark mode: moon is active (white icon over purple pill) */
+[data-theme="dark"] .ti-moon { color: #fff; }
+[data-theme="dark"] .ti-sun  { color: var(--muted-text); }
+
+/* ── giffgaff-style buttons ────────────────────────────────────────────── */
+@keyframes gg-shake {
+    0%   { transform: scale(1)    rotate(0deg); }
+    20%  { transform: scale(1.08) rotate(-3deg); }
+    40%  { transform: scale(1.06) rotate(3deg); }
+    60%  { transform: scale(1.04) rotate(-2deg); }
+    80%  { transform: scale(1.02) rotate(1deg); }
+    100% { transform: scale(1)    rotate(0deg); }
 }
 
 .btn {
-    display: inline-block;
-    padding: 0.8rem 1.2rem;
-    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.6rem;
+    border-radius: 999px;
     font-weight: 700;
-    border: none;
+    font-size: 0.95rem;
+    border: 2px solid transparent;
     cursor: pointer;
-    transition: 0.25s ease;
+    text-decoration: none;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    -webkit-font-smoothing: antialiased;
+}
+
+.btn--shake {
+    animation: gg-shake 0.5s ease forwards;
 }
 
 .btn-primary {
     background: var(--primary);
     color: #fff;
+    border-color: var(--primary);
 }
 
 .btn-primary:hover {
     background: var(--primary-hover);
+    border-color: var(--primary-hover);
 }
 
 .btn-outline {
     background: transparent;
-    color: var(--primary);
-    border: 1px solid var(--primary);
+    color: var(--text-color);
+    border-color: var(--text-color);
 }
 
 .btn-outline:hover {
-    background: var(--primary);
-    color: #fff;
+    background: var(--text-color);
+    color: var(--bg-color);
 }
 
 .btn-full {
     width: 100%;
     text-align: center;
+}
+
+/* btn-sm as a size modifier on top of .btn — only adjusts size, not border */
+.btn-sm {
+    padding: 0.35rem 1rem;
+    font-size: 0.8rem;
+}
+
+/* Standalone small action buttons (used without .btn base) */
+.btn-save,
+.btn-read {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.2;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    -webkit-font-smoothing: antialiased;
+}
+
+.btn-save,
+.btn-read {
+    padding: 0.35rem 1rem;
+    font-size: 0.8rem;
+}
+
+.btn-save {
+    background: transparent;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+}
+
+.btn-save:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-read {
+    background: var(--primary);
+    color: #fff;
+    border: 1.5px solid var(--primary);
+}
+
+.btn-read:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
 }
 
 .hero,
@@ -992,11 +1108,6 @@ ul {
     margin-top: 0.5rem;
 }
 
-.btn-sm {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.82rem;
-    border-radius: 8px;
-}
 
 .form-stars {
     display: flex;
