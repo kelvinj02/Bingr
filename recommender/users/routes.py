@@ -17,9 +17,8 @@ def signup():
         user=User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)    #adding user to database
         db.session.commit()     #commit change in database
-        flash("Your account has been created successfully!", "success")
-        login_user(user)
-        return redirect(url_for('users.onboarding'))
+        flash("Your account has been created successfully! Please log in.", "success")
+        return redirect(url_for('users.login'))
     return render_template("register.html", title="Sign Up", form=form)
 
 @users.route("/login", methods=['GET', 'POST'])
