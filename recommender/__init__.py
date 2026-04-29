@@ -26,14 +26,12 @@ def create_app(config_class=Config):
     from recommender.users.routes import users
     from recommender.reviews.routes import reviews
     from recommender.main.routes import main
-    from recommender.details.routes import details
     from recommender.errors.handlers import errors
     from recommender.books.routes import books
     from recommender.movies.routes import movies
     app.register_blueprint(users)
     app.register_blueprint(reviews)
     app.register_blueprint(main)
-    app.register_blueprint(details)
     app.register_blueprint(errors)
     app.register_blueprint(books)
     app.register_blueprint(movies)

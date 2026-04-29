@@ -88,7 +88,7 @@
       <button class="carousel-arrow" onclick="scrollCarousel('similar', -1)">&#8592;</button>
       <div class="carousel" id="carousel-similar">
         {% for s in similar %}
-        <a href="{{ url_for('books.detail', title=s.title | url_encode_title) }}"
+        <a href="{{ url_for('books.detail', title=s.title) }}"
            class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
           <div class="browse-cover">
             <div class="cover-initials book-placeholder">{{ s.title[:2].upper() }}</div>

@@ -180,6 +180,42 @@ def get_book_characters(title: str) -> list[str]:
         return []
 
 
+def get_book_by_title(title: str) -> Optional[dict]:
+    """Search Google Books by title and return a book dict keyed like the ML dataframe."""
+    # Try exact intitle search first, then a plain keyword search as fallback
+    queries = [f'intitle:"{title}"', f'intitle:{title}', title]
+    for query in queries:
+        params = {
+            "q":          query,
+            "maxResults": 1,
+            "printType":  "books",
+            "key":        GOOGLE_BOOKS_API_KEY,
+        }
+        try:
+            response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
+            items = response.json().get("items", [])
+            if not items:
+                continue
+            info        = items[0].get("volumeInfo", {})
+            image_links = info.get("imageLinks", {})
+            raw_desc    = info.get("description", "")
+            description = (raw_desc[:400] + "…" if len(raw_desc) > 400 else raw_desc) or ""
+            authors     = info.get("authors", ["Unknown Author"])
+            return {
+                "Book":         info.get("title", title),
+                "Author":       ", ".join(authors) if isinstance(authors, list) else authors,
+                "Avg_Rating":   info.get("averageRating"),
+                "Num_Ratings":  info.get("ratingsCount"),
+                "Description":  description,
+                "Genres_Clean": ", ".join(info.get("categories", [])[:3]),
+                "URL":          info.get("infoLink", ""),
+                "_cover_url":   image_links.get("thumbnail") or image_links.get("smallThumbnail"),
+            }
+        except Exception:
+            continue
+    return None
+
+
 def get_book_cover(title: str) -> Optional[str]:
     params = {"q": f'intitle:"{title}"', "maxResults": 1, "key": GOOGLE_BOOKS_API_KEY}
     try:

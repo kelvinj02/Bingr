@@ -22,7 +22,7 @@
               {{ item.item_type | capitalize }}
             </span>
 
-            <a href="{{ url_for('movies.detail', title=item.title | url_encode_title) if item.item_type == 'movie' else url_for('books.detail', title=item.title | url_encode_title) }}"
+            <a href="{{ url_for('movies.detail', title=item.title) if item.item_type == 'movie' else url_for('books.detail', title=item.title) }}"
                class="wishlist-title">{{ item.title }}</a>
 
             <span class="wishlist-date">Added {{ item.added_at.strftime('%b %d, %Y') }}</span>

@@ -19,7 +19,7 @@
 <!-- shared macro for a single card -->
 {% macro render_card(item) %}
   {% if item.kind == 'book' %}
-  <a href="{{ url_for('books.detail', title=item.title | url_encode_title) }}"
+  <a href="{{ url_for('books.detail', title=item.title) }}"
      class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
     <div class="browse-cover">
       {% if item.thumbnail %}
@@ -41,7 +41,7 @@
     {% endif %}
   </a>
   {% else %}
-  <a href="{{ url_for('movies.detail', title=item.title | url_encode_title) }}"
+  <a href="{{ url_for('movies.detail', title=item.title) }}"
      class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
     <div class="browse-cover">
       {% if item.poster_url %}

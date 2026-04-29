@@ -84,27 +84,23 @@ def wishlist_toggle():
 
 @books.route('/books/<path:title>', methods=['GET', 'POST'])
 def detail(title):
-    from recommender.api_clients.books_client import get_book_cover, get_book_recommendations, get_book_characters
+    from recommender.api_clients.books_client import (
+        get_book_cover, get_book_by_title, get_book_characters
+    )
     df = current_app.recommender.df
     matches = df[df['Book'] == title]
 
     if matches.empty:
-        results = get_book_recommendations(favorites=[title], max_results=1)
-        if not results:
-            abort(404)
-        raw = results[0]
-        authors = raw.get('authors', ['Unknown'])
-        book = {
-            'Book':         raw.get('title', title),
-            'Author':       ', '.join(authors) if isinstance(authors, list) else authors,
-            'Avg_Rating':   raw.get('rating'),
-            'Description':  raw.get('description', ''),
-            'Genres_Clean': ', '.join(raw.get('genres', [])),
-            'URL':          raw.get('info_link', ''),
-            'Num_Ratings':  raw.get('rating_count', 0),
-        }
-        similar   = []
-        cover_url = raw.get('thumbnail')
+        book_data = get_book_by_title(title)
+        if book_data:
+            cover_url = book_data.pop('_cover_url', None)
+            book      = book_data
+        else:
+            # API unavailable — show a minimal page rather than 404
+            book      = {'Book': title, 'Author': '', 'Avg_Rating': None,
+                         'Num_Ratings': None, 'Description': '', 'Genres_Clean': '', 'URL': ''}
+            cover_url = None
+        similar = []
     else:
         book      = matches.iloc[0].to_dict()
         similar   = current_app.recommender.get_similar(title, top_n=10)

@@ -13,7 +13,7 @@
         <div class="book-grid">
             {% for movie in movies %}
             <div class="book-card">
-                <a href="{{ url_for('movies.detail', title=movie.title | url_encode_title) }}" style="text-decoration:none;color:inherit;">
+                <a href="{{ url_for('movies.detail', title=movie.title) }}" style="text-decoration:none;color:inherit;">
                     {% if movie.poster_url %}
                     <img src="{{ movie.poster_url }}" class="book-cover" alt="{{ movie.title }}" style="object-fit:cover;width:100%;height:100%;">
                     {% else %}

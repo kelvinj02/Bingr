@@ -112,8 +112,9 @@ class BookRecommender:
         exclude = exclude or set()
         if title not in self.title_to_idx:
             return []
+        n = len(self.quality_scores)
         idx = self.title_to_idx[title]
-        sim_scores = cosine_similarity(self.tfidf_matrix[idx], self.tfidf_matrix).flatten()
+        sim_scores = cosine_similarity(self.tfidf_matrix[idx], self.tfidf_matrix[:n]).flatten()
         combined = (1 - quality_weight) * sim_scores + quality_weight * self.quality_scores
         candidates = self.df.copy()
         candidates["_score"] = combined
@@ -128,7 +129,8 @@ class BookRecommender:
         profile = self._build_profile_vector(interactions)
         if profile is None:
             return []
-        sim_scores = cosine_similarity(profile, self.tfidf_matrix).flatten()
+        n = len(self.quality_scores)
+        sim_scores = cosine_similarity(profile, self.tfidf_matrix[:n]).flatten()
         combined = PERSONALIZED_MIX[0] * sim_scores + PERSONALIZED_MIX[1] * self.quality_scores
         candidates = self.df.copy()
         candidates["_score"] = combined
@@ -143,7 +145,8 @@ class BookRecommender:
         if profile is None:
             return cold[:top_n]
 
-        sim_scores = cosine_similarity(profile, self.tfidf_matrix).flatten()
+        n = len(self.quality_scores)
+        sim_scores = cosine_similarity(profile, self.tfidf_matrix[:n]).flatten()
         candidates = self.df.copy()
         candidates["_sim"] = sim_scores
         candidates = candidates[~candidates["Book"].isin(exclude)]

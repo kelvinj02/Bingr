@@ -32,7 +32,7 @@
                     {% if movie.user_status == 'saved' %}Saved ✓{% elif movie.user_status == 'watched' %}Watched ✓{% else %}+ Save{% endif %}
                 </button>
                 {% endif %}
-                <a href="{{ url_for('movies.detail', title=movie.title | url_encode_title) }}" class="btn-sm btn-read" style="text-align:center;">View</a>
+                <a href="{{ url_for('movies.detail', title=movie.title) }}" class="btn-sm btn-read" style="text-align:center;">View</a>
             </div>
         </div>
         {% endfor %}

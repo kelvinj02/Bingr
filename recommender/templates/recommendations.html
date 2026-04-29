@@ -13,7 +13,7 @@
         <div class="book-grid">
             {% for book in books %}
             <div class="book-card">
-                <a href="{{ url_for('books.detail', title=book.title | url_encode_title) }}" style="text-decoration:none;color:inherit;">
+                <a href="{{ url_for('books.detail', title=book.title) }}" style="text-decoration:none;color:inherit;">
                     <div class="book-cover">{{ book.title[:40] }}</div>
                     <div class="book-title" style="margin-top:0.5rem;">{{ book.title }}</div>
                     <div class="book-author">{{ book.author }}</div>
