@@ -1,48 +1,103 @@
 import random
 from flask import render_template, Blueprint, request, url_for, current_app
 from flask_login import current_user
-from recommender.models import UserBook, UserPreference
-from recommender.api_clients.movies_client import get_trending_movies
+from recommender import db
+from recommender.models import UserBook, UserMovie, UserPreference, WishListItem, SearchHistory
+from recommender.api_clients.movies_client import get_trending_movies, get_movie_recommendations
 from recommender.api_clients.books_client import get_book_recommendations
 
 main = Blueprint('main', __name__)
 
+
+def _norm_movie(m):
+    """Ensure movie dict always has poster_url (rename thumbnail if needed)."""
+    if 'poster_url' not in m:
+        m['poster_url'] = m.pop('thumbnail', None)
+    return m
+
+
+def _norm_book(b):
+    """Ensure book dict always has rating key (map avg_rating if needed)."""
+    if 'rating' not in b:
+        b['rating'] = b.get('avg_rating')
+    return b
+
+
 @main.route("/")
 @main.route("/home")
 def home():
-    # fetch 10 trending movies once, split between sections so they differ
-    all_movies = get_trending_movies(10)
-    rec_movies_raw  = all_movies[:5]
-    trend_movies_raw = all_movies[5:]
+    all_trending = get_trending_movies(10)
 
-    # personalized books for Recommendations; general popular for Trending
     if current_user.is_authenticated:
-        genres = [
-            r.value for r in
-            UserPreference.query.filter_by(user_id=current_user.id, pref_type='genre').all()
-        ]
-        rec_books_raw = get_book_recommendations(genres=genres, max_results=5)
+        # ── collect user signals ──────────────────────────────────────────────
+        book_rows    = UserBook.query.filter_by(user_id=current_user.id).all()
+        movie_rows   = UserMovie.query.filter_by(user_id=current_user.id).all()
+        wishlist_rows = WishListItem.query.filter_by(user_id=current_user.id).all()
+        genres = [r.value for r in UserPreference.query.filter_by(
+            user_id=current_user.id, pref_type='genre').all()]
+
+        # book interactions + wishlist books as saved signal
+        book_interactions = [{"title": r.book_title, "status": r.status, "rating": r.rating}
+                             for r in book_rows]
+        existing_book_titles = {b['title'] for b in book_interactions}
+        for w in wishlist_rows:
+            if w.item_type == 'book' and w.title not in existing_book_titles:
+                book_interactions.append({"title": w.title, "status": "saved", "rating": None})
+
+        # personalized ML book recommendations
+        rec_books_raw = current_app.recommender.get_personalized(
+            book_interactions, genres, top_n=5)
+
+        # movie signals: watched + wishlist + recent searches
+        watched_titles       = [r.movie_title for r in movie_rows if r.status == 'watched']
+        wishlist_movie_titles = [w.title for w in wishlist_rows if w.item_type == 'movie']
+        recent_searches      = (SearchHistory.query
+                                .filter_by(user_id=current_user.id)
+                                .order_by(SearchHistory.searched_at.desc())
+                                .limit(5).all())
+        search_queries = [s.search_query for s in recent_searches]
+
+        favorites = (watched_titles + wishlist_movie_titles + search_queries)[:3]
+
+        if favorites or genres:
+            rec_movies_raw = get_movie_recommendations(
+                favorites=favorites, genres=genres, max_results=5)
+        else:
+            rec_movies_raw = all_trending[:5]
     else:
-        rec_books_raw = get_book_recommendations(max_results=5)
+        rec_books_raw  = get_book_recommendations(max_results=5)
+        rec_movies_raw = all_trending[:5]
 
-    trend_books_raw = get_book_recommendations(max_results=5)
+    trend_movies_raw = all_trending[5:]
+    trend_books_raw  = get_book_recommendations(max_results=5)
 
-    rec_items = [{"kind": "movie", **m} for m in rec_movies_raw] + \
-                [{"kind": "book",  **b} for b in rec_books_raw]
+    rec_items = ([{"kind": "movie", **_norm_movie(m)} for m in rec_movies_raw] +
+                 [{"kind": "book",  **_norm_book(b)}  for b in rec_books_raw])
     random.shuffle(rec_items)
 
-    trend_items = [{"kind": "movie", **m} for m in trend_movies_raw] + \
-                  [{"kind": "book",  **b} for b in trend_books_raw]
+    trend_items = ([{"kind": "movie", **_norm_movie(m)} for m in trend_movies_raw] +
+                   [{"kind": "book",  **_norm_book(b)}  for b in trend_books_raw])
     random.shuffle(trend_items)
 
     return render_template("index.html", rec_items=rec_items, trend_items=trend_items)
+
 
 @main.route("/search")
 def search():
     q = request.args.get('q', '').strip()
     filter_type = request.args.get('type', 'all')
     results = []
+
     if q:
+        # log search for authenticated users (used to personalise recommendations)
+        if current_user.is_authenticated:
+            db.session.add(SearchHistory(
+                user_id=current_user.id,
+                search_query=q,
+                result_type=filter_type if filter_type != 'all' else None,
+            ))
+            db.session.commit()
+
         if filter_type in ('all', 'book'):
             df = current_app.recommender.df
             mask = (df['Book'].str.contains(q, case=False, na=False) |
@@ -55,6 +110,7 @@ def search():
                     'rating': row['Avg_Rating'],
                     'url': url_for('books.detail', title=row['Book'])
                 })
+
         if filter_type in ('all', 'movie'):
             df = current_app.movie_recommender.df
             mask = df['title'].str.contains(q, case=False, na=False)
@@ -65,7 +121,9 @@ def search():
                     'subtitle': row['overview'][:80],
                     'url': url_for('movies.detail', title=row['title'])
                 })
+
     return render_template('search_result.html', results=results, query=q, filter_type=filter_type)
+
 
 @main.route("/browse")
 def top_recommendations():
@@ -74,8 +132,8 @@ def top_recommendations():
     movies_raw = get_trending_movies(20)
     books_raw  = get_book_recommendations(max_results=20)
 
-    items = [{"kind": "movie", **m} for m in movies_raw] + \
-            [{"kind": "book",  **b} for b in books_raw]
+    items = ([{"kind": "movie", **_norm_movie(m)} for m in movies_raw] +
+             [{"kind": "book",  **_norm_book(b)}  for b in books_raw])
     random.shuffle(items)
 
     return render_template('browse.html', items=items, filter_type=filter_type)

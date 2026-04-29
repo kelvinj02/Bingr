@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint, abort, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from recommender import db, bcrypt
-from recommender.models import User, WishListItem, UserPreference
+from recommender.models import User, WishListItem, UserPreference, Comment, UserBook, UserMovie
 from recommender.users.forms import (RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, UpdateAccountForm)
 from recommender.users.utils import send_reset_email
 users = Blueprint('users', __name__)
@@ -50,7 +50,14 @@ def account():
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-    return render_template('account.html', title='Account', form=form)
+    book_ratings  = UserBook.query.filter(UserBook.user_id == current_user.id,
+                                           UserBook.rating.isnot(None)).all()
+    movie_ratings = UserMovie.query.filter(UserMovie.user_id == current_user.id,
+                                           UserMovie.rating.isnot(None)).all()
+    ratings  = book_ratings + movie_ratings
+    comments = Comment.query.filter_by(user_id=current_user.id).all()
+    return render_template('account.html', title='Account', form=form,
+                           ratings=ratings, comments=comments)
 
 #the route where the users enter their email to request to reset password
 @users.route("/reset_password", methods=['GET', 'POST'])

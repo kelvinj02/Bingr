@@ -108,6 +108,18 @@ class Comment(db.Model):
     def __repr__(self):
         return f"Comment('{self.item_type}', '{self.item_id}', score={self.review_score})"
 
+class SearchHistory(db.Model):
+    __tablename__ = 'search_history'
+    id           = db.Column(db.Integer, primary_key=True)
+    user_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    search_query = db.Column(db.String(200), nullable=False)
+    result_type  = db.Column(db.String(10), nullable=True)  # 'book', 'movie', or None for 'all'
+    searched_at  = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"SearchHistory(user={self.user_id}, '{self.query}')"
+
+
 class WishListItem(db.Model):
     __tablename__= 'wishlist_items'
     id=db.Column(db.Integer, primary_key=True)

@@ -26,10 +26,13 @@
         <img src="{{ item.thumbnail }}" alt="{{ item.title }}"
              style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-        <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
       {% else %}
-        <div class="cover-initials book-placeholder">{{ item.title[:2].upper() }}</div>
+        <img src="https://covers.openlibrary.org/b/title/{{ item.title | url_encode_title }}-M.jpg"
+             alt="{{ item.title }}"
+             style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+             class="ol-cover">
       {% endif %}
+      <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
     </div>
     <div class="browse-title">{{ item.title[:35] }}{% if item.title|length > 35 %}…{% endif %}</div>
     <div class="browse-type book-type">Book</div>
@@ -140,6 +143,20 @@
 {% endif %}
 
 <script>
+// Open Library cover fallback (for ML-recommended books that have no thumbnail)
+document.querySelectorAll('.ol-cover').forEach(img => {
+  img.addEventListener('load', function() {
+    if (this.naturalWidth < 10) {
+      this.style.display = 'none';
+      this.nextElementSibling.style.display = 'flex';
+    }
+  });
+  img.addEventListener('error', function() {
+    this.style.display = 'none';
+    this.nextElementSibling.style.display = 'flex';
+  });
+});
+
 function scrollCarousel(id, direction) {
   const carousel = document.getElementById('carousel-' + id);
   const atStart = carousel.scrollLeft <= 0;
