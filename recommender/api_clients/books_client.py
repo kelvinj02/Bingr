@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from typing import Optional
 
@@ -34,6 +35,38 @@ MOOD_KEYWORDS = {
     "funny & clever":    "funny",
     "underrated":        "underrated",
 }
+
+
+def _upgrade_cover_url(url: Optional[str]) -> Optional[str]:
+    """Replace zoom=N with zoom=0 in a Google Books URL to get the full-size cover."""
+    if not url:
+        return url
+    url = re.sub(r'zoom=\d+', 'zoom=0', url)
+    url = url.replace('&edge=curl', '')
+    return url
+
+
+def _get_openlibrary_cover(title: str) -> Optional[str]:
+    """Search Open Library for a large cover image by title."""
+    try:
+        resp = requests.get(
+            "https://openlibrary.org/search.json",
+            params={"title": title, "fields": "cover_i,isbn", "limit": 1},
+            timeout=8,
+        )
+        docs = resp.json().get("docs", [])
+        if not docs:
+            return None
+        doc = docs[0]
+        cover_id = doc.get("cover_i")
+        if cover_id:
+            return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
+        isbns = doc.get("isbn", [])
+        if isbns:
+            return f"https://covers.openlibrary.org/b/isbn/{isbns[0]}-L.jpg"
+    except Exception:
+        pass
+    return None
 
 
 def _build_query(
@@ -124,7 +157,8 @@ def get_book_recommendations(
             "description": clean_description,
             "rating":      info.get("averageRating"),
             "rating_count":info.get("ratingsCount"),
-            "thumbnail":   image_links.get("thumbnail") or image_links.get("smallThumbnail"),
+            "thumbnail":   _upgrade_cover_url(
+                               image_links.get("thumbnail") or image_links.get("smallThumbnail")),
             "info_link":   info.get("infoLink"),
             "page_count":  info.get("pageCount"),
             "language":    info.get("language"),
@@ -155,7 +189,8 @@ def get_book(book_id: str) -> Optional[dict]:
             "description": clean_description,
             "rating":      info.get("averageRating"),
             "rating_count":info.get("ratingsCount"),
-            "thumbnail":   image_links.get("thumbnail") or image_links.get("smallThumbnail"),
+            "thumbnail":   _upgrade_cover_url(
+                               image_links.get("thumbnail") or image_links.get("smallThumbnail")),
             "info_link":   info.get("infoLink"),
             "page_count":  info.get("pageCount"),
             "language":    info.get("language"),
@@ -209,7 +244,9 @@ def get_book_by_title(title: str) -> Optional[dict]:
                 "Description":  description,
                 "Genres_Clean": ", ".join(info.get("categories", [])[:3]),
                 "URL":          info.get("infoLink", ""),
-                "_cover_url":   image_links.get("thumbnail") or image_links.get("smallThumbnail"),
+                "_cover_url":   _upgrade_cover_url(
+                                    image_links.get("thumbnail") or image_links.get("smallThumbnail"))
+                                or _get_openlibrary_cover(title),
             }
         except Exception:
             continue
@@ -220,11 +257,13 @@ def get_book_cover(title: str) -> Optional[str]:
     params = {"q": f'intitle:"{title}"', "maxResults": 1, "key": GOOGLE_BOOKS_API_KEY}
     try:
         response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
-        response.raise_for_status()
         items = response.json().get("items", [])
-        if not items:
-            return None
-        links = items[0].get("volumeInfo", {}).get("imageLinks", {})
-        return links.get("thumbnail") or links.get("smallThumbnail")
+        if items:
+            links = items[0].get("volumeInfo", {}).get("imageLinks", {})
+            url = links.get("thumbnail") or links.get("smallThumbnail")
+            upgraded = _upgrade_cover_url(url)
+            if upgraded:
+                return upgraded
     except Exception:
-        return None
+        pass
+    return _get_openlibrary_cover(title)

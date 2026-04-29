@@ -6,7 +6,7 @@
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
       <div class="cover-initials {{ 'movie-placeholder' if item.type == 'movie' else 'book-placeholder' }}" style="display:none;">{{ item.title[:2].upper() }}</div>
     {% elif item.type == 'book' %}
-      <img src="https://covers.openlibrary.org/b/title/{{ item.title | url_encode_title }}-M.jpg"
+      <img src="https://covers.openlibrary.org/b/title/{{ item.title | url_encode_title }}-L.jpg"
            alt="{{ item.title }}"
            style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
            class="ol-cover-search">

@@ -48,7 +48,11 @@
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
             <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
           {% else %}
-            <div class="cover-initials book-placeholder">{{ item.title[:2].upper() }}</div>
+            <img src="https://covers.openlibrary.org/b/title/{{ item.title | url_encode_title }}-L.jpg"
+                 alt="{{ item.title }}"
+                 style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+                 class="ol-cover-browse">
+            <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
           {% endif %}
         </div>
         <div class="browse-title">{{ item.title[:40] }}{% if item.title|length > 40 %}…{% endif %}</div>
@@ -72,6 +76,19 @@
 </div>
 
 <script>
+document.querySelectorAll('.ol-cover-browse').forEach(img => {
+  img.addEventListener('load', function() {
+    if (this.naturalWidth < 10) {
+      this.style.display = 'none';
+      this.nextElementSibling.style.display = 'flex';
+    }
+  });
+  img.addEventListener('error', function() {
+    this.style.display = 'none';
+    this.nextElementSibling.style.display = 'flex';
+  });
+});
+
 document.querySelectorAll('.filter-pill').forEach(pill => {
   pill.addEventListener('click', () => {
     document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));

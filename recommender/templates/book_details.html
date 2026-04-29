@@ -91,7 +91,11 @@
         <a href="{{ url_for('books.detail', title=s.title) }}"
            class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
           <div class="browse-cover">
-            <div class="cover-initials book-placeholder">{{ s.title[:2].upper() }}</div>
+            <img src="https://covers.openlibrary.org/b/title/{{ s.title | url_encode_title }}-L.jpg"
+                 alt="{{ s.title }}"
+                 style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+                 class="ol-cover-sim">
+            <div class="cover-initials book-placeholder" style="display:none;">{{ s.title[:2].upper() }}</div>
           </div>
           <div class="browse-title">{{ s.title[:35] }}{% if s.title|length > 35 %}…{% endif %}</div>
           <div class="browse-type book-type">Book</div>
@@ -162,6 +166,19 @@
 </div>
 
 <script>
+document.querySelectorAll('.ol-cover-sim').forEach(img => {
+  img.addEventListener('load', function() {
+    if (this.naturalWidth < 10) {
+      this.style.display = 'none';
+      this.nextElementSibling.style.display = 'flex';
+    }
+  });
+  img.addEventListener('error', function() {
+    this.style.display = 'none';
+    this.nextElementSibling.style.display = 'flex';
+  });
+});
+
 const BOOK_TITLE = {{ book.Book | tojson }};
 
 // Wishlist toggle
