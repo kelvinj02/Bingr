@@ -3,148 +3,222 @@
 
 {% block content %}
 <div class="container" style="padding-top:2rem;padding-bottom:3rem;">
-  <div class="detail-layout">
 
-    <div class="detail-cover">
+  <!-- Hero -->
+  <div class="detail-hero">
+    <div class="detail-poster">
       {% if cover_url %}
-        <img src="{{ cover_url }}" alt="{{ book.Book }}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+        <img src="{{ cover_url }}" alt="{{ book.Book }}"
+             style="width:100%;height:100%;object-fit:cover;border-radius:12px;"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div class="cover-initials book-placeholder" style="display:none;">{{ book.Book[:2].upper() }}</div>
       {% else %}
-        <div style="width:100%;height:100%;background:linear-gradient(135deg,var(--primary),#b49cff);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:3rem;font-weight:700;color:#fff;">
-          {{ book.Book[:2].upper() }}
-        </div>
+        <div class="cover-initials book-placeholder">{{ book.Book[:2].upper() }}</div>
       {% endif %}
     </div>
 
-    <div class="detail-info">
-      <h1 style="font-size:1.8rem;margin-bottom:0.25rem;">{{ book.Book }}</h1>
-      <p style="color:var(--muted-text);margin-bottom:0.75rem;">by {{ book.Author }}</p>
-
+    <div class="detail-meta">
       {% if book.Genres_Clean %}
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem;">
+        <div class="detail-tags">
           {% for g in book.Genres_Clean.split(',')[:4] %}
-            <span style="font-size:0.75rem;padding:3px 10px;border:1px solid var(--border);border-radius:999px;color:var(--muted-text);">{{ g.strip() }}</span>
+            <span class="detail-tag">{{ g.strip() }}</span>
           {% endfor %}
         </div>
       {% endif %}
 
-      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;font-size:0.9rem;color:var(--muted-text);">
+      <h1 class="detail-title">{{ book.Book }}</h1>
+
+      {% if book.Author %}
+        <p class="detail-tagline">by {{ book.Author }}</p>
+      {% endif %}
+
+      <div class="detail-stats">
         {% if book.Avg_Rating %}
-          <span>★ {{ "%.2f"|format(book.Avg_Rating) }}</span>
-        {% endif %}
-        {% if book.Num_Ratings %}
-          <span>{{ "{:,}".format(book.Num_Ratings | int) }} ratings</span>
+          <span class="detail-rating">★ {{ "%.2f"|format(book.Avg_Rating) }}
+            {% if book.Num_Ratings %}<small style="font-weight:400;opacity:.7;">({{ "{:,}".format(book.Num_Ratings | int) }})</small>{% endif %}
+          </span>
         {% endif %}
       </div>
 
       {% if book.Description %}
-        <p style="color:var(--muted-text);line-height:1.7;margin-bottom:1.5rem;">{{ book.Description[:400] }}{% if book.Description|length > 400 %}…{% endif %}</p>
+        <p class="detail-overview">{{ book.Description[:500] }}{% if book.Description|length > 500 %}…{% endif %}</p>
       {% endif %}
 
       {% if current_user.is_authenticated %}
-        <div class="detail-actions" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">
-          {% if user_status == 'read' %}
-            <button class="btn btn-outline" disabled>✓ Read</button>
-          {% elif user_status == 'saved' %}
-            <button class="btn btn-outline interact-btn" data-title="{{ book.Book }}" data-action="save" id="save-btn">Saved ✓</button>
-            <button class="btn btn-primary interact-btn" data-title="{{ book.Book }}" data-action="read" id="read-btn">Mark as Read</button>
-          {% else %}
-            <button class="btn btn-outline interact-btn" data-title="{{ book.Book }}" data-action="save" id="save-btn">+ Save</button>
-            <button class="btn btn-primary interact-btn" data-title="{{ book.Book }}" data-action="read" id="read-btn">Mark as Read</button>
-          {% endif %}
-        </div>
-
-        <div class="star-rating {% if user_status == 'read' %}visible{% endif %}" id="star-rating" style="display:flex;align-items:center;gap:0.4rem;margin-bottom:1rem;">
-          <span style="font-size:0.9rem;color:var(--muted-text);">Your rating:</span>
-          {% for i in range(1, 6) %}
-            <span class="star {% if user_rating and i <= user_rating %}filled{% endif %}" data-value="{{ i }}"
-              style="font-size:1.4rem;cursor:pointer;color:{% if user_rating and i <= user_rating %}#f59e0b{% else %}var(--border){% endif %};">★</span>
-          {% endfor %}
+        <div class="detail-actions">
+          <button class="btn {% if in_wishlist %}btn-primary{% else %}btn-outline{% endif %}"
+                  id="wishlist-btn"
+                  data-title="{{ book.Book }}">
+            {% if in_wishlist %}Saved to Wishlist ✓{% else %}Save to Wishlist{% endif %}
+          </button>
         </div>
       {% else %}
-        <p style="color:var(--muted-text);font-size:0.9rem;margin-bottom:1rem;">
-          <a href="{{ url_for('users.login') }}" style="color:var(--primary);">Log in</a> to save or mark as read.
+        <p style="font-size:.9rem;color:var(--muted-text);margin-top:.75rem;">
+          <a href="{{ url_for('users.login') }}" style="color:var(--primary);">Log in</a> to save or review.
         </p>
       {% endif %}
 
       {% if book.URL %}
-        <a href="{{ book.URL }}" target="_blank" rel="noopener" class="btn btn-outline" style="display:inline-block;">View on Goodreads →</a>
+        <a href="{{ book.URL }}" target="_blank" rel="noopener"
+           class="btn btn-outline" style="margin-top:1rem;display:inline-block;">View on Goodreads →</a>
       {% endif %}
     </div>
+  </div>
 
-    <div class="similar-sidebar">
-      <h3 style="margin-bottom:1rem;font-size:1rem;">Similar books</h3>
-      {% for s in similar %}
-        <a href="{{ url_for('books.detail', title=s.title | url_encode_title) }}" class="similar-book" style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:1rem;text-decoration:none;color:inherit;">
-          <div style="width:40px;height:56px;border-radius:5px;background:linear-gradient(135deg,var(--primary),#b49cff);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;">
-            {{ s.title[:2].upper() }}
-          </div>
-          <div>
-            <div style="font-size:0.85rem;font-weight:600;line-height:1.3;">{{ s.title[:40] }}{% if s.title|length > 40 %}…{% endif %}</div>
-            <div style="font-size:0.78rem;color:var(--muted-text);">{{ s.author }}</div>
-          </div>
-        </a>
+  <!-- Characters -->
+  {% if characters %}
+  <section class="detail-section">
+    <h2 class="detail-section-title">Characters</h2>
+    <div class="cast-grid">
+      {% for name in characters %}
+      <div class="cast-card">
+        <div class="cast-avatar">{{ name[:1].upper() }}</div>
+        <div class="cast-name">{{ name }}</div>
+      </div>
       {% endfor %}
     </div>
+  </section>
+  {% endif %}
 
-  </div>
+  <!-- Similar books -->
+  {% if similar %}
+  <section class="detail-section">
+    <h2 class="detail-section-title">Similar Books</h2>
+    <div class="carousel-wrapper">
+      <button class="carousel-arrow" onclick="scrollCarousel('similar', -1)">&#8592;</button>
+      <div class="carousel" id="carousel-similar">
+        {% for s in similar %}
+        <a href="{{ url_for('books.detail', title=s.title | url_encode_title) }}"
+           class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
+          <div class="browse-cover">
+            <div class="cover-initials book-placeholder">{{ s.title[:2].upper() }}</div>
+          </div>
+          <div class="browse-title">{{ s.title[:35] }}{% if s.title|length > 35 %}…{% endif %}</div>
+          <div class="browse-type book-type">Book</div>
+          {% if s.author %}<div style="font-size:.75rem;color:var(--muted-text);">{{ s.author }}</div>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      <button class="carousel-arrow" onclick="scrollCarousel('similar', 1)">&#8594;</button>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Reviews -->
+  <section class="detail-section" id="reviews">
+    <h2 class="detail-section-title">Reviews</h2>
+
+    {% if current_user.is_authenticated and form %}
+    <div class="review-form-box">
+      <h3 style="font-size:1rem;margin-bottom:1rem;">Write a Review</h3>
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="review-score-row">
+          <span style="font-size:.9rem;color:var(--muted-text);">Your rating:</span>
+          <div class="form-stars" id="form-stars">
+            {% for i in range(1,6) %}
+              <span class="form-star" data-value="{{ i }}">★</span>
+            {% endfor %}
+          </div>
+        </div>
+        <input type="hidden" name="review_score" id="review-score-input" value="">
+        {{ form.body(class="review-textarea", placeholder="Share your thoughts…") }}
+        <button type="submit" class="btn btn-primary" style="margin-top:.75rem;">Post Review</button>
+      </form>
+    </div>
+    {% elif not current_user.is_authenticated %}
+      <p style="color:var(--muted-text);font-size:.9rem;">
+        <a href="{{ url_for('users.login') }}" style="color:var(--primary);">Log in</a> to write a review.
+      </p>
+    {% endif %}
+
+    {% if comments %}
+      <div class="reviews-list">
+        {% for c in comments %}
+        <div class="review-card">
+          <div class="review-header">
+            <span class="review-author">{{ c.author.username }}</span>
+            <span class="review-score">★ {{ "%.1f"|format(c.review_score) }}</span>
+            <span class="review-date" style="color:var(--muted-text);font-size:.78rem;">{{ c.created_at.strftime('%b %d, %Y') }}</span>
+          </div>
+          <p class="review-body">{{ c.content }}</p>
+          {% if current_user.is_authenticated and c.user_id == current_user.id %}
+          <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+            <a href="{{ url_for('reviews.update_comment', comment_id=c.id) }}?next={{ request.url }}" class="btn btn-outline btn-sm">Edit</a>
+            <form method="POST" action="{{ url_for('reviews.delete_comment', comment_id=c.id) }}?next={{ request.url }}">
+              {{ form.hidden_tag() if form }}
+              <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-text);">Delete</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--muted-text);font-size:.9rem;margin-top:1rem;">No reviews yet. Be the first!</p>
+    {% endif %}
+  </section>
+
 </div>
 
 <script>
 const BOOK_TITLE = {{ book.Book | tojson }};
 
-document.querySelectorAll('.interact-btn').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const action = btn.dataset.action;
-    const res = await fetch('/books/interact', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({title: BOOK_TITLE, action: action})
-    });
-    const data = await res.json();
-    if (!data.ok) return;
-
-    const saveBtn = document.getElementById('save-btn');
-    const readBtn = document.getElementById('read-btn');
-    const starRating = document.getElementById('star-rating');
-
-    if (data.status === 'saved') {
-      if (saveBtn) saveBtn.textContent = 'Saved ✓';
-    } else if (data.status === 'removed') {
-      if (saveBtn) saveBtn.textContent = '+ Save';
-    } else if (data.status === 'read') {
-      if (saveBtn) saveBtn.remove();
-      if (readBtn) { readBtn.textContent = '✓ Read'; readBtn.disabled = true; }
-      if (starRating) starRating.classList.add('visible');
-    }
+// Wishlist toggle
+const wishlistBtn = document.getElementById('wishlist-btn');
+if (wishlistBtn) {
+  wishlistBtn.addEventListener('click', async () => {
+    try {
+      const res = await fetch('/books/wishlist', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title: BOOK_TITLE})
+      });
+      const data = await res.json();
+      if (!data.ok) return;
+      if (data.in_wishlist) {
+        wishlistBtn.textContent = 'Saved to Wishlist ✓';
+        wishlistBtn.classList.replace('btn-outline', 'btn-primary');
+      } else {
+        wishlistBtn.textContent = 'Save to Wishlist';
+        wishlistBtn.classList.replace('btn-primary', 'btn-outline');
+      }
+    } catch (e) { console.error('Wishlist error:', e); }
   });
-});
+}
 
-document.querySelectorAll('.star').forEach(star => {
-  star.addEventListener('click', async () => {
-    const rating = parseInt(star.dataset.value);
-    await fetch('/books/interact', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({title: BOOK_TITLE, action: 'read', rating: rating})
-    });
-    document.querySelectorAll('.star').forEach((s, i) => {
-      s.style.color = i < rating ? '#f59e0b' : 'var(--border)';
-    });
+// Form star rating
+const formStars = document.querySelectorAll('.form-star');
+const scoreInput = document.getElementById('review-score-input');
+let selectedRating = 0;
+
+formStars.forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.dataset.value);
+    scoreInput.value = selectedRating;
+    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
   });
-
   star.addEventListener('mouseover', () => {
     const val = parseInt(star.dataset.value);
-    document.querySelectorAll('.star').forEach((s, i) => {
-      s.style.color = i < val ? '#f59e0b' : 'var(--border)';
-    });
+    formStars.forEach((s, i) => s.classList.toggle('filled', i < val));
   });
-
   star.addEventListener('mouseout', () => {
-    const filled = {{ user_rating or 0 }};
-    document.querySelectorAll('.star').forEach((s, i) => {
-      s.style.color = i < filled ? '#f59e0b' : 'var(--border)';
-    });
+    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
   });
 });
+
+// Similar carousel
+function scrollCarousel(id, direction) {
+  const carousel = document.getElementById('carousel-' + id);
+  const atStart = carousel.scrollLeft <= 0;
+  const atEnd   = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 1;
+  if (direction === -1 && atStart) {
+    carousel.scrollTo({ left: carousel.scrollWidth, behavior: 'smooth' });
+  } else if (direction === 1 && atEnd) {
+    carousel.scrollTo({ left: 0, behavior: 'smooth' });
+  } else {
+    carousel.scrollBy({ left: direction * 340, behavior: 'smooth' });
+  }
+}
 </script>
 {% endblock %}

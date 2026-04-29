@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from recommender import db
-from recommender.models import UserBook, UserPreference
+from recommender.models import UserBook, UserPreference, Comment, WishListItem
+from recommender.reviews.forms import CommentForm
 
 books = Blueprint('books', __name__)
 
@@ -20,9 +21,14 @@ def _user_book_status(title):
     if not current_user.is_authenticated:
         return None, None
     row = UserBook.query.filter_by(user_id=current_user.id, book_title=title).first()
-    if row:
-        return row.status, row.rating
-    return None, None
+    return (row.status, row.rating) if row else (None, None)
+
+
+def _book_in_wishlist(title):
+    if not current_user.is_authenticated:
+        return False
+    return bool(WishListItem.query.filter_by(
+        user_id=current_user.id, item_type='book', item_id=title[:50]).first())
 
 
 @books.route('/recommendations')
@@ -45,37 +51,88 @@ def recommendations():
     return render_template('recommendations.html', books=recs, mode=mode, statuses=statuses)
 
 
-@books.route('/books/<path:title>')
+# /books/wishlist must be defined BEFORE /books/<path:title>
+@books.route('/books/wishlist', methods=['POST'])
+@login_required
+def wishlist_toggle():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify(error="Invalid JSON"), 400
+
+    title = data.get('title', '').strip()
+    if not title:
+        return jsonify(error="title is required"), 400
+
+    item_id  = title[:50]
+    existing = WishListItem.query.filter_by(
+        user_id=current_user.id, item_type='book', item_id=item_id).first()
+
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify(ok=True, in_wishlist=False)
+
+    db.session.add(WishListItem(
+        user_id=current_user.id,
+        item_type='book',
+        item_id=item_id,
+        title=title[:60],
+    ))
+    db.session.commit()
+    return jsonify(ok=True, in_wishlist=True)
+
+
+@books.route('/books/<path:title>', methods=['GET', 'POST'])
 def detail(title):
-    from recommender.api_clients.books_client import get_book_cover, get_book_recommendations
+    from recommender.api_clients.books_client import get_book_cover, get_book_recommendations, get_book_characters
     df = current_app.recommender.df
     matches = df[df['Book'] == title]
 
     if matches.empty:
-        # title came from Google Books — fetch it from the API
         results = get_book_recommendations(favorites=[title], max_results=1)
         if not results:
             abort(404)
         raw = results[0]
         authors = raw.get('authors', ['Unknown'])
         book = {
-            'Book':       raw.get('title', title),
-            'Author':     ', '.join(authors) if isinstance(authors, list) else authors,
-            'Avg_Rating': raw.get('rating'),
-            'Description':raw.get('description', ''),
+            'Book':         raw.get('title', title),
+            'Author':       ', '.join(authors) if isinstance(authors, list) else authors,
+            'Avg_Rating':   raw.get('rating'),
+            'Description':  raw.get('description', ''),
             'Genres_Clean': ', '.join(raw.get('genres', [])),
-            'URL':        raw.get('info_link', ''),
+            'URL':          raw.get('info_link', ''),
+            'Num_Ratings':  raw.get('rating_count', 0),
         }
-        similar = []
+        similar   = []
         cover_url = raw.get('thumbnail')
     else:
-        book = matches.iloc[0].to_dict()
-        similar = current_app.recommender.get_similar(title, top_n=5)
+        book      = matches.iloc[0].to_dict()
+        similar   = current_app.recommender.get_similar(title, top_n=10)
         cover_url = get_book_cover(title)
 
-    status, rating = _user_book_status(title)
+    characters    = get_book_characters(title)
+    comments      = Comment.query.filter_by(
+        item_type='book', item_id=title).order_by(Comment.created_at.desc()).all()
+    in_wishlist   = _book_in_wishlist(title)
+    status, user_rating = _user_book_status(title)
+
+    form = CommentForm() if current_user.is_authenticated else None
+    if form and form.validate_on_submit():
+        db.session.add(Comment(
+            user_id=current_user.id,
+            item_type='book',
+            item_id=title,
+            review_score=form.review_score.data,
+            content=form.body.data,
+        ))
+        db.session.commit()
+        flash('Review posted!', 'success')
+        return redirect(url_for('books.detail', title=title))
+
     return render_template('book_details.html', book=book, similar=similar,
-                           user_status=status, user_rating=rating, cover_url=cover_url)
+                           in_wishlist=in_wishlist, user_status=status,
+                           user_rating=user_rating, cover_url=cover_url,
+                           characters=characters, comments=comments, form=form)
 
 
 @books.route('/search')
@@ -93,62 +150,12 @@ def search():
     for _, row in results.iterrows():
         status, rating = _user_book_status(row['Book'])
         books_list.append({
-            "title": row['Book'],
-            "author": row['Author'],
-            "genres": row['Genres_Clean'],
-            "avg_rating": row['Avg_Rating'],
-            "url": row['URL'],
+            "title":       row['Book'],
+            "author":      row['Author'],
+            "genres":      row['Genres_Clean'],
+            "avg_rating":  row['Avg_Rating'],
+            "url":         row['URL'],
             "user_status": status,
             "user_rating": rating,
         })
     return render_template('search_result.html', books=books_list, query=q)
-
-
-@books.route('/books/interact', methods=['POST'])
-@login_required
-def interact():
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify(error="Invalid JSON"), 400
-
-    title = data.get('title', '').strip()
-    action = data.get('action', '').strip()
-    rating = data.get('rating')
-
-    if not title:
-        return jsonify(error="title is required"), 400
-    if action not in ('save', 'read'):
-        return jsonify(error="action must be 'save' or 'read'"), 400
-    if rating is not None:
-        try:
-            rating = int(rating)
-        except (ValueError, TypeError):
-            return jsonify(error="rating must be an integer"), 400
-        if rating not in (1, 2, 3, 4, 5):
-            return jsonify(error="rating must be between 1 and 5"), 400
-
-    if title not in current_app.recommender.title_to_idx:
-        return jsonify(error="book not found"), 404
-
-    row = UserBook.query.filter_by(user_id=current_user.id, book_title=title).first()
-
-    if action == 'save':
-        if row is None:
-            db.session.add(UserBook(user_id=current_user.id, book_title=title, status='saved'))
-        elif row.status == 'saved':
-            db.session.delete(row)
-            db.session.commit()
-            return jsonify(ok=True, status='removed', rating=None)
-        # row.status == 'read' → no-op, read always wins
-    elif action == 'read':
-        if row is None:
-            db.session.add(UserBook(user_id=current_user.id, book_title=title,
-                                    status='read', rating=rating))
-        else:
-            row.status = 'read'
-            row.rating = rating
-
-    db.session.commit()
-    updated = UserBook.query.filter_by(user_id=current_user.id, book_title=title).first()
-    return jsonify(ok=True, status=updated.status if updated else 'removed',
-                   rating=updated.rating if updated else None)

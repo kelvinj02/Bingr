@@ -163,6 +163,23 @@ def get_book(book_id: str) -> Optional[dict]:
     except Exception:
         return None
 
+def get_book_characters(title: str) -> list[str]:
+    """Return character names for a book via Open Library subject_people field."""
+    try:
+        resp = requests.get(
+            "https://openlibrary.org/search.json",
+            params={"title": title, "fields": "title,subject_people", "limit": 1},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        docs = resp.json().get("docs", [])
+        if docs:
+            return docs[0].get("subject_people", [])[:10]
+        return []
+    except Exception:
+        return []
+
+
 def get_book_cover(title: str) -> Optional[str]:
     params = {"q": f'intitle:"{title}"', "maxResults": 1, "key": GOOGLE_BOOKS_API_KEY}
     try:

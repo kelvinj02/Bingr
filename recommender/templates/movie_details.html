@@ -1,121 +1,241 @@
 {% extends "base.html" %}
+{% block title %}{{ movie.title }} — BinGr{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="detail-layout">
+<div class="container" style="padding-top:2rem;padding-bottom:3rem;">
 
-        <div class="detail-cover">
-            {% if poster_url %}
-            <img src="{{ poster_url }}" alt="{{ movie.title }}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
-            {% else %}
-            {{ movie.title[:60] }}
-            {% endif %}
-        </div>
-
-        <div class="detail-info">
-            <h1>{{ movie.title }}</h1>
-            <p class="detail-desc">{{ movie.overview }}</p>
-
-            {% if current_user.is_authenticated %}
-            <div class="detail-actions">
-                {% if user_status == 'watched' %}
-                    <button class="btn btn-outline btn-sm interact-btn" data-title="{{ movie.title }}" data-action="watched" disabled>✓ Watched</button>
-                {% elif user_status == 'saved' %}
-                    <button class="btn btn-outline interact-btn" data-title="{{ movie.title }}" data-action="save" id="save-btn">Saved ✓</button>
-                    <button class="btn btn-primary interact-btn" data-title="{{ movie.title }}" data-action="watched" id="watched-btn">Mark as Watched</button>
-                {% else %}
-                    <button class="btn btn-outline interact-btn" data-title="{{ movie.title }}" data-action="save" id="save-btn">+ Save</button>
-                    <button class="btn btn-primary interact-btn" data-title="{{ movie.title }}" data-action="watched" id="watched-btn">Mark as Watched</button>
-                {% endif %}
-            </div>
-
-            <div class="star-rating {% if user_status == 'watched' %}visible{% endif %}" id="star-rating">
-                <span>Your rating:</span>
-                {% for i in range(1, 6) %}
-                <span class="star {% if user_rating and i <= user_rating %}filled{% endif %}" data-value="{{ i }}">★</span>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p style="color:var(--muted-text);margin-top:0.5rem;font-size:0.9rem;">
-                <a href="{{ url_for('users.login') }}" style="color:var(--primary);">Log in</a> to save or mark as watched.
-            </p>
-            {% endif %}
-
-            <a href="https://www.themoviedb.org/movie/{{ movie.movie_id }}" target="_blank" rel="noopener"
-               class="btn btn-outline" style="margin-top:1rem;display:inline-block;">View on TMDB →</a>
-        </div>
-
-        <div class="similar-sidebar">
-            <h3>Similar movies</h3>
-            {% for s in similar %}
-            <a href="{{ url_for('movies.detail', title=s.title | url_encode_title) }}" class="similar-book">
-                <div class="similar-book-cover"></div>
-                <div>
-                    <div class="similar-book-title">{{ s.title }}</div>
-                    <div class="similar-book-author">{{ s.overview[:60] }}{% if s.overview | length > 60 %}…{% endif %}</div>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-
+  <!-- Hero -->
+  <div class="detail-hero">
+    <div class="detail-poster">
+      {% if movie.poster_url %}
+        <img src="{{ movie.poster_url }}" alt="{{ movie.title }}"
+             style="width:100%;height:100%;object-fit:cover;border-radius:12px;"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div class="cover-initials movie-placeholder" style="display:none;">{{ movie.title[:2].upper() }}</div>
+      {% else %}
+        <div class="cover-initials movie-placeholder">{{ movie.title[:2].upper() }}</div>
+      {% endif %}
     </div>
+
+    <div class="detail-meta">
+      {% if movie.genres %}
+        <div class="detail-tags">
+          {% for g in movie.genres %}<span class="detail-tag">{{ g }}</span>{% endfor %}
+        </div>
+      {% endif %}
+
+      <h1 class="detail-title">{{ movie.title }}</h1>
+
+      {% if movie.tagline %}
+        <p class="detail-tagline">"{{ movie.tagline }}"</p>
+      {% endif %}
+
+      <div class="detail-stats">
+        {% if movie.release_date %}<span>📅 {{ movie.release_date }}</span>{% endif %}
+        {% if movie.runtime %}<span>⏱ {{ movie.runtime }} min</span>{% endif %}
+        {% if movie.rating %}<span class="detail-rating">★ {{ "%.1f"|format(movie.rating) }}
+          {% if movie.rating_count %}<small style="font-weight:400;opacity:.7;">({{ "{:,}".format(movie.rating_count) }})</small>{% endif %}
+        </span>{% endif %}
+      </div>
+
+      {% if movie.directors %}
+        <p class="detail-crew"><strong>Director{% if movie.directors|length > 1 %}s{% endif %}:</strong>
+          {{ movie.directors | join(', ') }}</p>
+      {% endif %}
+      {% if movie.producers %}
+        <p class="detail-crew"><strong>Producers:</strong> {{ movie.producers | join(', ') }}</p>
+      {% endif %}
+
+      {% if movie.overview %}
+        <p class="detail-overview">{{ movie.overview }}</p>
+      {% endif %}
+
+      {% if current_user.is_authenticated %}
+        <div class="detail-actions">
+          <button class="btn {% if in_wishlist %}btn-primary{% else %}btn-outline{% endif %}"
+                  id="wishlist-btn"
+                  data-movie-id="{{ movie.id }}"
+                  data-title="{{ movie.title }}">
+            {% if in_wishlist %}Saved to Wishlist ✓{% else %}Save to Wishlist{% endif %}
+          </button>
+        </div>
+      {% else %}
+        <p style="font-size:.9rem;color:var(--muted-text);margin-top:.75rem;">
+          <a href="{{ url_for('users.login') }}" style="color:var(--primary);">Log in</a> to save or review.
+        </p>
+      {% endif %}
+
+      <a href="{{ movie.info_link }}" target="_blank" rel="noopener"
+         class="btn btn-outline" style="margin-top:1rem;display:inline-block;">View on TMDB →</a>
+    </div>
+  </div>
+
+  <!-- Cast -->
+  {% if movie.cast %}
+  <section class="detail-section">
+    <h2 class="detail-section-title">Cast</h2>
+    <div class="cast-grid">
+      {% for actor in movie.cast %}
+      <div class="cast-card">
+        <div class="cast-avatar">{{ actor.name[:1].upper() }}</div>
+        <div class="cast-name">{{ actor.name }}</div>
+        {% if actor.character %}
+          <div class="cast-role">{{ actor.character[:30] }}{% if actor.character|length > 30 %}…{% endif %}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Similar movies -->
+  {% if similar %}
+  <section class="detail-section">
+    <h2 class="detail-section-title">Similar Movies</h2>
+    <div class="carousel-wrapper">
+      <button class="carousel-arrow" onclick="scrollCarousel('similar', -1)">&#8592;</button>
+      <div class="carousel" id="carousel-similar">
+        {% for s in similar %}
+        <a href="{{ url_for('movies.detail', title=s.title | url_encode_title) }}"
+           class="browse-card carousel-item" style="flex:0 0 160px;text-decoration:none;color:inherit;">
+          <div class="browse-cover">
+            {% if s.poster_url %}
+              <img src="{{ s.poster_url }}" alt="{{ s.title }}"
+                   style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="cover-initials movie-placeholder" style="display:none;">{{ s.title[:2].upper() }}</div>
+            {% else %}
+              <div class="cover-initials movie-placeholder">{{ s.title[:2].upper() }}</div>
+            {% endif %}
+          </div>
+          <div class="browse-title">{{ s.title[:35] }}{% if s.title|length > 35 %}…{% endif %}</div>
+          <div class="browse-type movie-type">Movie</div>
+        </a>
+        {% endfor %}
+      </div>
+      <button class="carousel-arrow" onclick="scrollCarousel('similar', 1)">&#8594;</button>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Reviews -->
+  <section class="detail-section" id="reviews">
+    <h2 class="detail-section-title">Reviews</h2>
+
+    {% if current_user.is_authenticated and form %}
+    <div class="review-form-box">
+      <h3 style="font-size:1rem;margin-bottom:1rem;">Write a Review</h3>
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="review-score-row">
+          <span style="font-size:.9rem;color:var(--muted-text);">Your rating:</span>
+          <div class="form-stars" id="form-stars">
+            {% for i in range(1,6) %}
+              <span class="form-star" data-value="{{ i }}">★</span>
+            {% endfor %}
+          </div>
+        </div>
+        <input type="hidden" name="review_score" id="review-score-input" value="">
+        {{ form.body(class="review-textarea", placeholder="Share your thoughts…") }}
+        <button type="submit" class="btn btn-primary" style="margin-top:.75rem;">Post Review</button>
+      </form>
+    </div>
+    {% elif not current_user.is_authenticated %}
+      <p style="color:var(--muted-text);font-size:.9rem;">
+        <a href="{{ url_for('users.login') }}" style="color:var(--primary);">Log in</a> to write a review.
+      </p>
+    {% endif %}
+
+    {% if comments %}
+      <div class="reviews-list">
+        {% for c in comments %}
+        <div class="review-card">
+          <div class="review-header">
+            <span class="review-author">{{ c.author.username }}</span>
+            <span class="review-score">★ {{ "%.1f"|format(c.review_score) }}</span>
+            <span class="review-date" style="color:var(--muted-text);font-size:.78rem;">{{ c.created_at.strftime('%b %d, %Y') }}</span>
+          </div>
+          <p class="review-body">{{ c.content }}</p>
+          {% if current_user.is_authenticated and c.user_id == current_user.id %}
+          <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+            <a href="{{ url_for('reviews.update_comment', comment_id=c.id) }}?next={{ request.url }}" class="btn btn-outline btn-sm">Edit</a>
+            <form method="POST" action="{{ url_for('reviews.delete_comment', comment_id=c.id) }}?next={{ request.url }}">
+              {{ form.hidden_tag() if form }}
+              <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-text);">Delete</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--muted-text);font-size:.9rem;margin-top:1rem;">No reviews yet. Be the first!</p>
+    {% endif %}
+  </section>
+
 </div>
 
 <script>
 const MOVIE_TITLE = {{ movie.title | tojson }};
 
-document.querySelectorAll('.interact-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const action = btn.dataset.action;
-        const res = await fetch('/movies/interact', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({title: MOVIE_TITLE, action: action})
-        });
-        const data = await res.json();
-        if (!data.ok) return;
+// Wishlist toggle
+const wishlistBtn = document.getElementById('wishlist-btn');
+if (wishlistBtn) {
+  wishlistBtn.addEventListener('click', async () => {
+    try {
+      const res = await fetch('/movies/wishlist', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          movie_id: parseInt(wishlistBtn.dataset.movieId),
+          title: MOVIE_TITLE
+        })
+      });
+      const data = await res.json();
+      if (!data.ok) return;
+      if (data.in_wishlist) {
+        wishlistBtn.textContent = 'Saved to Wishlist ✓';
+        wishlistBtn.classList.replace('btn-outline', 'btn-primary');
+      } else {
+        wishlistBtn.textContent = 'Save to Wishlist';
+        wishlistBtn.classList.replace('btn-primary', 'btn-outline');
+      }
+    } catch (e) { console.error('Wishlist error:', e); }
+  });
+}
 
-        const saveBtn = document.getElementById('save-btn');
-        const watchedBtn = document.getElementById('watched-btn');
-        const starRating = document.getElementById('star-rating');
+// Form star rating
+const formStars = document.querySelectorAll('.form-star');
+const scoreInput = document.getElementById('review-score-input');
+let selectedRating = 0;
 
-        if (data.status === 'saved') {
-            if (saveBtn) saveBtn.textContent = 'Saved ✓';
-        } else if (data.status === 'removed') {
-            if (saveBtn) saveBtn.textContent = '+ Save';
-        } else if (data.status === 'watched') {
-            if (saveBtn) saveBtn.remove();
-            if (watchedBtn) { watchedBtn.textContent = '✓ Watched'; watchedBtn.disabled = true; }
-            if (starRating) starRating.classList.add('visible');
-        }
-    });
+formStars.forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.dataset.value);
+    scoreInput.value = selectedRating;
+    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
+  });
+  star.addEventListener('mouseover', () => {
+    const val = parseInt(star.dataset.value);
+    formStars.forEach((s, i) => s.classList.toggle('filled', i < val));
+  });
+  star.addEventListener('mouseout', () => {
+    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
+  });
 });
 
-document.querySelectorAll('.star').forEach(star => {
-    star.addEventListener('click', async () => {
-        const rating = parseInt(star.dataset.value);
-        await fetch('/movies/interact', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({title: MOVIE_TITLE, action: 'watched', rating: rating})
-        });
-        document.querySelectorAll('.star').forEach((s, i) => {
-            s.classList.toggle('filled', i < rating);
-        });
-    });
-
-    star.addEventListener('mouseover', () => {
-        const val = parseInt(star.dataset.value);
-        document.querySelectorAll('.star').forEach((s, i) => {
-            s.classList.toggle('filled', i < val);
-        });
-    });
-
-    star.addEventListener('mouseout', () => {
-        const filled = parseInt('{{ user_rating or 0 }}');
-        document.querySelectorAll('.star').forEach((s, i) => {
-            s.classList.toggle('filled', i < filled);
-        });
-    });
-});
+// Similar carousel
+function scrollCarousel(id, direction) {
+  const carousel = document.getElementById('carousel-' + id);
+  const atStart = carousel.scrollLeft <= 0;
+  const atEnd   = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 1;
+  if (direction === -1 && atStart) {
+    carousel.scrollTo({ left: carousel.scrollWidth, behavior: 'smooth' });
+  } else if (direction === 1 && atEnd) {
+    carousel.scrollTo({ left: 0, behavior: 'smooth' });
+  } else {
+    carousel.scrollBy({ left: direction * 340, behavior: 'smooth' });
+  }
+}
 </script>
 {% endblock %}

@@ -44,7 +44,8 @@ def update_comment(comment_id):
         comment.content = form.body.data
         db.session.commit()
         flash("Your review has been updated!", "success")
-        return redirect(url_for('details.detail', item_type=comment.item_type, item_id=comment.item_id))
+        next_url = request.args.get('next') or request.form.get('next')
+        return redirect(next_url or url_for('details.detail', item_type=comment.item_type, item_id=comment.item_id))
     elif request.method == 'GET':
         form.review_score.data = comment.review_score
         form.body.data = comment.content
@@ -62,4 +63,5 @@ def delete_comment(comment_id):
     db.session.delete(comment)
     db.session.commit()
     flash("Your review has been deleted.", "info")
-    return redirect(url_for('details.detail', item_type=item_type, item_id=item_id))
+    next_url = request.args.get('next') or request.form.get('next')
+    return redirect(next_url or url_for('details.detail', item_type=item_type, item_id=item_id))

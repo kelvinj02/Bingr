@@ -201,6 +201,50 @@ def get_trending_movies(max_results: int = 5) -> list[dict]:
     except Exception:
         return []
 
+def search_movie_by_title(title: str) -> Optional[int]:
+    """Public wrapper: return TMDB movie ID for a given title."""
+    return _search_movie_id(title)
+
+
+def get_movie_full(movie_id: int) -> Optional[dict]:
+    """Fetch full movie detail + cast/crew from TMDB (2 API calls)."""
+    params = {"api_key": TMDB_API_KEY, "language": "en-US"}
+    try:
+        d = requests.get(f"{TMDB_BASE_URL}/movie/{movie_id}", params=params, timeout=10)
+        d.raise_for_status()
+        c = requests.get(f"{TMDB_BASE_URL}/movie/{movie_id}/credits", params=params, timeout=10)
+        c.raise_for_status()
+        item    = d.json()
+        credits = c.json()
+
+        crew      = credits.get("crew", [])
+        directors = [p["name"] for p in crew if p["job"] == "Director"]
+        producers = [p["name"] for p in crew
+                     if p["job"] in ("Producer", "Executive Producer")][:3]
+        cast      = [{"name": a["name"], "character": a.get("character", "")}
+                     for a in credits.get("cast", [])[:10]]
+
+        poster = item.get("poster_path")
+        return {
+            "id":           str(item.get("id")),
+            "title":        item.get("title", "Unknown"),
+            "tagline":      item.get("tagline") or "",
+            "overview":     item.get("overview") or "",
+            "release_date": (item.get("release_date") or "")[:4],
+            "runtime":      item.get("runtime"),
+            "genres":       [g["name"] for g in item.get("genres", [])],
+            "rating":       item.get("vote_average"),
+            "rating_count": item.get("vote_count"),
+            "poster_url":   f"{TMDB_IMAGE_BASE}{poster}" if poster else None,
+            "directors":    directors,
+            "producers":    producers,
+            "cast":         cast,
+            "info_link":    f"https://www.themoviedb.org/movie/{item.get('id')}",
+        }
+    except Exception:
+        return None
+
+
 def search_movies(query: str, max_results: int = 15) -> list[dict]:
     """Search TMDB by title keyword, returns movies with poster_url included."""
     url = f"{TMDB_BASE_URL}/search/movie"

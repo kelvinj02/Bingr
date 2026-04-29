@@ -4,33 +4,35 @@
 {% block content %}
 <div class="container" style="padding-top:2rem;padding-bottom:3rem;">
 
-  <div class="section-head" style="margin-bottom:1.5rem;">
+  <div class="section-head" style="margin-bottom:1.75rem;">
     <h1 style="font-size:1.6rem;">My Wishlist</h1>
     <span style="color:var(--muted-text);font-size:0.95rem;">{{ items|length }} item{{ 's' if items|length != 1 }}</span>
   </div>
 
   {% if items %}
-    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+    <div class="wishlist-grid">
       {% for item in items %}
-        <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div class="wishlist-card">
+          <div class="wishlist-cover {% if item.item_type == 'movie' %}movie-placeholder{% else %}book-placeholder{% endif %}">
+            {{ item.title[:2].upper() }}
+          </div>
 
-          <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:3px 10px;border-radius:999px;
-            {% if item.item_type == 'movie' %}background:#fff7ed;color:#c2410c;{% else %}background:#eff6ff;color:#1d4ed8;{% endif %}">
-            {{ item.item_type | capitalize }}
-          </span>
+          <div class="wishlist-info">
+            <span class="browse-type {% if item.item_type == 'movie' %}movie-type{% else %}book-type{% endif %}">
+              {{ item.item_type | capitalize }}
+            </span>
 
-          <span style="flex:1;font-weight:600;font-size:0.95rem;">{{ item.title }}</span>
+            <a href="{{ url_for('movies.detail', title=item.title | url_encode_title) if item.item_type == 'movie' else url_for('books.detail', title=item.title | url_encode_title) }}"
+               class="wishlist-title">{{ item.title }}</a>
 
-          <span style="color:var(--muted-text);font-size:0.82rem;white-space:nowrap;">
-            Added {{ item.added_at.strftime('%b %d, %Y') }}
-          </span>
+            <span class="wishlist-date">Added {{ item.added_at.strftime('%b %d, %Y') }}</span>
+          </div>
 
-          <form method="POST" action="{{ url_for('users.remove_wishlist', item_id=item.id) }}" style="margin:0;">
-            <button type="submit" class="btn btn-outline" style="padding:0.4rem 0.9rem;font-size:0.82rem;color:#dc2626;border-color:#dc2626;">
+          <form method="POST" action="{{ url_for('users.remove_wishlist', item_id=item.id) }}" style="flex-shrink:0;">
+            <button type="submit" class="btn btn-outline btn-sm" style="color:var(--danger-text);border-color:var(--danger-text);">
               Remove
             </button>
           </form>
-
         </div>
       {% endfor %}
     </div>
@@ -40,7 +42,7 @@
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
       </svg>
       <h3>Your wishlist is empty</h3>
-      <p>Save movies and books you want to come back to.</p>
+      <p>Hit <strong>Save to Wishlist</strong> on any movie or book to collect it here.</p>
       <a href="{{ url_for('main.top_recommendations') }}" class="btn btn-primary" style="margin-top:1rem;display:inline-block;">Browse titles</a>
     </div>
   {% endif %}
