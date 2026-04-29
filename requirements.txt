@@ -13,4 +13,4 @@ Email-validator
 requests
 numpy
 pandas
-sklearn
+scikit-learn
