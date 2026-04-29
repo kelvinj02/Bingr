@@ -20,11 +20,13 @@
                 {% endif %}
             </ul>
 
+            {% block nav_search %}
             <form class="nav-search" action="{{ url_for('main.search') }}" method="get">
                 <input type="text" name="q" placeholder="Search movies &amp; books…" autocomplete="off">
                 <input type="hidden" name="type" value="all">
                 <button type="submit">🔍</button>
             </form>
+            {% endblock %}
 
             <div class="nav-actions">
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">

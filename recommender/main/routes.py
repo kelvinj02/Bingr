@@ -3,7 +3,7 @@ from flask import render_template, Blueprint, request, url_for, current_app
 from flask_login import current_user
 from recommender import db
 from recommender.models import UserBook, UserMovie, UserPreference, WishListItem, SearchHistory
-from recommender.api_clients.movies_client import get_trending_movies, get_movie_recommendations
+from recommender.api_clients.movies_client import get_trending_movies, get_movie_recommendations, search_movies
 from recommender.api_clients.books_client import get_book_recommendations
 
 main = Blueprint('main', __name__)
@@ -67,22 +67,23 @@ def search():
                     df['Author'].str.contains(q, case=False, na=False))
             for _, row in df[mask].head(15).iterrows():
                 results.append({
-                    'type': 'book',
-                    'title': row['Book'],
-                    'subtitle': row['Author'],
-                    'rating': row['Avg_Rating'],
-                    'url': url_for('books.detail', title=row['Book'])
+                    'type':      'book',
+                    'title':     row['Book'],
+                    'subtitle':  row['Author'],
+                    'rating':    row['Avg_Rating'],
+                    'url':       url_for('books.detail', title=row['Book']),
+                    'poster_url': None,  # template falls back to Open Library
                 })
 
         if filter_type in ('all', 'movie'):
-            df = current_app.movie_recommender.df
-            mask = df['title'].str.contains(q, case=False, na=False)
-            for _, row in df[mask].head(15).iterrows():
+            for m in search_movies(q, max_results=15):
                 results.append({
-                    'type': 'movie',
-                    'title': row['title'],
-                    'subtitle': row['overview'][:80],
-                    'url': url_for('movies.detail', title=row['title'])
+                    'type':      'movie',
+                    'title':     m['title'],
+                    'subtitle':  (m.get('description') or '')[:80],
+                    'rating':    m.get('rating'),
+                    'url':       url_for('movies.detail', title=m['title']),
+                    'poster_url': m.get('poster_url'),
                 })
 
     return render_template('search_result.html', results=results, query=q, filter_type=filter_type)

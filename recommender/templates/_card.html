@@ -1,8 +1,23 @@
-<a href="{{ item.url }}" class="result-card" style="text-decoration:none;">
-  <span class="result-card-type">{{ item.type }}</span>
-  <div class="result-card-title">{{ item.title[:60] }}{% if item.title|length > 60 %}…{% endif %}</div>
-  <div class="result-card-sub">{{ item.subtitle[:80] }}{% if item.subtitle|length > 80 %}…{% endif %}</div>
+<a href="{{ item.url }}" class="browse-card" data-type="{{ item.type }}" style="text-decoration:none;color:inherit;">
+  <div class="browse-cover">
+    {% if item.poster_url %}
+      <img src="{{ item.poster_url }}" alt="{{ item.title }}"
+           style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <div class="cover-initials {{ 'movie-placeholder' if item.type == 'movie' else 'book-placeholder' }}" style="display:none;">{{ item.title[:2].upper() }}</div>
+    {% elif item.type == 'book' %}
+      <img src="https://covers.openlibrary.org/b/title/{{ item.title | url_encode_title }}-M.jpg"
+           alt="{{ item.title }}"
+           style="width:100%;height:100%;object-fit:cover;border-radius:10px;"
+           class="ol-cover-search">
+      <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
+    {% else %}
+      <div class="cover-initials movie-placeholder">{{ item.title[:2].upper() }}</div>
+    {% endif %}
+  </div>
+  <div class="browse-title">{{ item.title[:40] }}{% if item.title|length > 40 %}…{% endif %}</div>
+  <div class="browse-type {{ 'movie-type' if item.type == 'movie' else 'book-type' }}">{{ item.type | capitalize }}</div>
   {% if item.rating %}
-    <div style="font-size:0.78rem;color:#f59e0b;font-weight:600;margin-top:auto;">★ {{ "%.1f"|format(item.rating) }}</div>
+    <div class="browse-rating">★ {{ "%.1f"|format(item.rating) }}</div>
   {% endif %}
 </a>

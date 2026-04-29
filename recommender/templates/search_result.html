@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Search: {{ query }} — Bingr{% endblock %}
+{% block nav_search %}{% endblock %}
 
 {% block content %}
 <div class="container page-top">
@@ -31,7 +32,7 @@
     </div>
 
     {% if results %}
-    <div class="grid grid-wide" style="padding-bottom:80px;">
+    <div class="browse-grid" style="padding-bottom:80px;">
       {% for item in results %}
       {% include '_card.html' %}
       {% endfor %}
@@ -46,4 +47,27 @@
   {% endif %}
 
 </div>
+
+<script>
+document.querySelectorAll('.ol-cover-search').forEach(img => {
+  img.addEventListener('load', function() {
+    if (this.naturalWidth < 10) {
+      this.style.display = 'none';
+      this.nextElementSibling.style.display = 'flex';
+    }
+  });
+  img.addEventListener('error', function() {
+    this.style.display = 'none';
+    this.nextElementSibling.style.display = 'flex';
+  });
+});
+
+// filter pills update the hidden type input and re-submit
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.getElementById('filter-type-input').value = pill.dataset.value;
+    pill.closest('form').submit();
+  });
+});
+</script>
 {% endblock %}

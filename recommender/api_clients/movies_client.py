@@ -201,6 +201,22 @@ def get_trending_movies(max_results: int = 5) -> list[dict]:
     except Exception:
         return []
 
+def search_movies(query: str, max_results: int = 15) -> list[dict]:
+    """Search TMDB by title keyword, returns movies with poster_url included."""
+    url = f"{TMDB_BASE_URL}/search/movie"
+    params = {"api_key": TMDB_API_KEY, "query": query, "page": 1, "language": "en-US"}
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        results = response.json().get("results", [])[:max_results]
+        movies = [_format_movie(item, [], None) for item in results]
+        for m in movies:
+            m['poster_url'] = m.pop('thumbnail', None)
+        return movies
+    except Exception:
+        return []
+
+
 def get_movie_poster(movie_id: int) -> Optional[str]:
     url = f"{TMDB_BASE_URL}/movie/{movie_id}"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
