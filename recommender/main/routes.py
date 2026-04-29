@@ -28,55 +28,18 @@ def _norm_book(b):
 def home():
     all_trending = get_trending_movies(10)
 
-    if current_user.is_authenticated:
-        # ── collect user signals ──────────────────────────────────────────────
-        book_rows    = UserBook.query.filter_by(user_id=current_user.id).all()
-        movie_rows   = UserMovie.query.filter_by(user_id=current_user.id).all()
-        wishlist_rows = WishListItem.query.filter_by(user_id=current_user.id).all()
-        genres = [r.value for r in UserPreference.query.filter_by(
-            user_id=current_user.id, pref_type='genre').all()]
-
-        # book interactions + wishlist books as saved signal
-        book_interactions = [{"title": r.book_title, "status": r.status, "rating": r.rating}
-                             for r in book_rows]
-        existing_book_titles = {b['title'] for b in book_interactions}
-        for w in wishlist_rows:
-            if w.item_type == 'book' and w.title not in existing_book_titles:
-                book_interactions.append({"title": w.title, "status": "saved", "rating": None})
-
-        # personalized ML book recommendations
-        rec_books_raw = current_app.recommender.get_personalized(
-            book_interactions, genres, top_n=5)
-
-        # movie signals: watched + wishlist + recent searches
-        watched_titles       = [r.movie_title for r in movie_rows if r.status == 'watched']
-        wishlist_movie_titles = [w.title for w in wishlist_rows if w.item_type == 'movie']
-        recent_searches      = (SearchHistory.query
-                                .filter_by(user_id=current_user.id)
-                                .order_by(SearchHistory.searched_at.desc())
-                                .limit(5).all())
-        search_queries = [s.search_query for s in recent_searches]
-
-        favorites = (watched_titles + wishlist_movie_titles + search_queries)[:3]
-
-        if favorites or genres:
-            rec_movies_raw = get_movie_recommendations(
-                favorites=favorites, genres=genres, max_results=5)
-        else:
-            rec_movies_raw = all_trending[:5]
-    else:
-        rec_books_raw  = get_book_recommendations(max_results=5)
-        rec_movies_raw = all_trending[:5]
+    rec_movies_raw = _personalized_movie_items(top_n=5)
+    rec_books_raw  = _personalized_book_items(top_n=5)
 
     trend_movies_raw = all_trending[5:]
-    trend_books_raw  = get_book_recommendations(max_results=5)
+    trend_books_raw  = [_norm_book(b) for b in get_book_recommendations(max_results=5)]
 
-    rec_items = ([{"kind": "movie", **_norm_movie(m)} for m in rec_movies_raw] +
-                 [{"kind": "book",  **_norm_book(b)}  for b in rec_books_raw])
+    rec_items = ([{"kind": "movie", **m} for m in rec_movies_raw] +
+                 [{"kind": "book",  **b} for b in rec_books_raw])
     random.shuffle(rec_items)
 
     trend_items = ([{"kind": "movie", **_norm_movie(m)} for m in trend_movies_raw] +
-                   [{"kind": "book",  **_norm_book(b)}  for b in trend_books_raw])
+                   [{"kind": "book",  **b} for b in trend_books_raw])
     random.shuffle(trend_items)
 
     return render_template("index.html", rec_items=rec_items, trend_items=trend_items)
@@ -125,6 +88,77 @@ def search():
     return render_template('search_result.html', results=results, query=q, filter_type=filter_type)
 
 
+def _personalized_movie_items(top_n=20):
+    """Return personalized movie items for authenticated users, trending otherwise."""
+    if current_user.is_authenticated:
+        movie_rows    = UserMovie.query.filter_by(user_id=current_user.id).all()
+        wishlist_rows = WishListItem.query.filter_by(user_id=current_user.id).all()
+        genres = [r.value for r in UserPreference.query.filter_by(
+            user_id=current_user.id, pref_type='genre').all()]
+
+        watched_titles        = [r.movie_title for r in movie_rows if r.status == 'watched']
+        wishlist_movie_titles = [w.title for w in wishlist_rows if w.item_type == 'movie']
+        recent_searches       = (SearchHistory.query
+                                 .filter_by(user_id=current_user.id)
+                                 .order_by(SearchHistory.searched_at.desc())
+                                 .limit(10).all())
+        search_queries = [s.search_query for s in recent_searches]
+        favorites = (watched_titles + wishlist_movie_titles + search_queries)[:3]
+
+        if favorites or genres:
+            raw = get_movie_recommendations(favorites=favorites, genres=genres, max_results=top_n)
+            return [_norm_movie(m) for m in raw]
+
+    return get_trending_movies(top_n)
+
+
+def _personalized_book_items(top_n=20):
+    """Return personalized ML book items for authenticated users, popular otherwise."""
+    if current_user.is_authenticated:
+        book_rows     = UserBook.query.filter_by(user_id=current_user.id).all()
+        wishlist_rows = WishListItem.query.filter_by(user_id=current_user.id).all()
+        genres = [r.value for r in UserPreference.query.filter_by(
+            user_id=current_user.id, pref_type='genre').all()]
+
+        book_interactions = [{"title": r.book_title, "status": r.status, "rating": r.rating}
+                             for r in book_rows]
+        existing = {b['title'] for b in book_interactions}
+        for w in wishlist_rows:
+            if w.item_type == 'book' and w.title not in existing:
+                book_interactions.append({"title": w.title, "status": "saved", "rating": None})
+
+        raw = current_app.recommender.get_personalized(book_interactions, genres, top_n=top_n)
+        return [_norm_book(b) for b in raw]
+
+    return [_norm_book(b) for b in get_book_recommendations(max_results=top_n)]
+
+
+@main.route("/recommendations")
+def recommendations():
+    movies_raw = _personalized_movie_items(top_n=20)
+    books_raw  = _personalized_book_items(top_n=20)
+
+    items = ([{"kind": "movie", **m} for m in movies_raw] +
+             [{"kind": "book",  **b} for b in books_raw])
+    random.shuffle(items)
+
+    return render_template('browse.html', items=items, filter_type='all',
+                           page_title='Recommendations')
+
+
+@main.route("/trending")
+def trending():
+    movies_raw = get_trending_movies(20)
+    books_raw  = [_norm_book(b) for b in get_book_recommendations(max_results=20)]
+
+    items = ([{"kind": "movie", **_norm_movie(m)} for m in movies_raw] +
+             [{"kind": "book",  **b} for b in books_raw])
+    random.shuffle(items)
+
+    return render_template('browse.html', items=items, filter_type='all',
+                           page_title='Trending')
+
+
 @main.route("/browse")
 def top_recommendations():
     filter_type = request.args.get('type', 'all')
@@ -136,4 +170,5 @@ def top_recommendations():
              [{"kind": "book",  **_norm_book(b)}  for b in books_raw])
     random.shuffle(items)
 
-    return render_template('browse.html', items=items, filter_type=filter_type)
+    return render_template('browse.html', items=items, filter_type=filter_type,
+                           page_title='Top Recommendations')
