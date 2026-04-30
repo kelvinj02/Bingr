@@ -1,6 +1,7 @@
 import os
 import requests
 from typing import Optional
+from recommender import cache
 
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
@@ -47,6 +48,7 @@ def _get_genre_ids(genres: list[str]) -> list[int]:
     return ids
 
 
+@cache.memoize(timeout=86400)
 def _search_movie_id(title: str) -> Optional[int]:
     """Look up a movie's TMDB ID by title, used to find similar movies."""
     url = f"{TMDB_BASE_URL}/search/movie"
@@ -64,6 +66,7 @@ def _search_movie_id(title: str) -> Optional[int]:
         return None
 
 
+@cache.memoize(timeout=3600)
 def _get_similar_movies(movie_id: int, max_results: int) -> list[dict]:
     """Fetch movies similar to a given TMDB movie ID."""
     url = f"{TMDB_BASE_URL}/movie/{movie_id}/similar"
@@ -76,6 +79,7 @@ def _get_similar_movies(movie_id: int, max_results: int) -> list[dict]:
         return []
 
 
+@cache.memoize(timeout=3600)
 def _discover_movies(genre_ids: list[int], max_results: int) -> list[dict]:
     """Discover movies by genre using TMDB's discover endpoint."""
     url = f"{TMDB_BASE_URL}/discover/movie"
@@ -187,6 +191,7 @@ def get_movie(movie_id: str) -> Optional[dict]:
     except Exception:
         return None
 
+@cache.memoize(timeout=600)
 def get_trending_movies(max_results: int = 5) -> list[dict]:
     url = f"{TMDB_BASE_URL}/trending/movie/week"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
@@ -206,6 +211,7 @@ def search_movie_by_title(title: str) -> Optional[int]:
     return _search_movie_id(title)
 
 
+@cache.memoize(timeout=3600)
 def get_movie_full(movie_id: int) -> Optional[dict]:
     """Fetch full movie detail + cast/crew from TMDB (2 API calls)."""
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
@@ -245,6 +251,7 @@ def get_movie_full(movie_id: int) -> Optional[dict]:
         return None
 
 
+@cache.memoize(timeout=900)
 def search_movies(query: str, max_results: int = 15) -> list[dict]:
     """Search TMDB by title keyword, returns movies with poster_url included."""
     url = f"{TMDB_BASE_URL}/search/movie"

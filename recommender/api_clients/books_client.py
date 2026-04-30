@@ -2,6 +2,7 @@ import os
 import re
 import requests
 from typing import Optional
+from recommender import cache
 
 GOOGLE_BOOKS_API_KEY = os.getenv("BOOKS_API_KEY")
 GOOGLE_BOOKS_BASE_URL = "https://www.googleapis.com/books/v1/volumes"
@@ -93,6 +94,7 @@ def _build_query(
     return "+".join(parts) if parts else "bestseller fiction"
 
 
+@cache.memoize(timeout=600)
 def get_book_recommendations(
     favorites: list[str] = None,
     genres: list[str] = None,
@@ -198,6 +200,7 @@ def get_book(book_id: str) -> Optional[dict]:
     except Exception:
         return None
 
+@cache.memoize(timeout=86400)
 def get_book_characters(title: str) -> list[str]:
     """Return character names for a book via Open Library subject_people field."""
     try:
@@ -215,6 +218,7 @@ def get_book_characters(title: str) -> list[str]:
         return []
 
 
+@cache.memoize(timeout=86400)
 def get_book_by_title(title: str) -> Optional[dict]:
     """Search Google Books by title and return a book dict keyed like the ML dataframe."""
     # Try exact intitle search first, then a plain keyword search as fallback
@@ -253,6 +257,7 @@ def get_book_by_title(title: str) -> Optional[dict]:
     return None
 
 
+@cache.memoize(timeout=86400)
 def get_book_cover(title: str) -> Optional[str]:
     params = {"q": f'intitle:"{title}"', "maxResults": 1, "key": GOOGLE_BOOKS_API_KEY}
     try:
