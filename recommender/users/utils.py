@@ -1,13 +1,30 @@
+import threading
 from flask import url_for, current_app
 from flask_mail import Message
 from recommender import mail
 
+
+def _send_async(app, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+        except Exception:
+            pass
+
+
 def send_reset_email(user):
     token = user.get_reset_token()
-    msg = Message('Password Reset Request', sender=current_app.config['MAIL_USERNAME'], recipients=[user.email])
-    msg.body = f"""To reset your password, visit to the following link:
-{url_for('users.reset_token', token=token, _external=True)}
+    reset_url = url_for('users.reset_token', token=token, _external=True)
+    msg = Message(
+        'Password Reset Request',
+        sender=current_app.config['MAIL_USERNAME'],
+        recipients=[user.email],
+    )
+    msg.body = f"""To reset your password, visit the following link:
+{reset_url}
 
-If you did not make this request then simply ignore this message and no changes will be made. 
+If you did not make this request then simply ignore this message and no changes will be made.
 """
-    mail.send(msg)
+    app = current_app._get_current_object()
+    thread = threading.Thread(target=_send_async, args=(app, msg), daemon=True)
+    thread.start()
