@@ -144,7 +144,7 @@ def add_to_wishlist(item_type, item_id):
         db.session.add(item)
         db.session.commit()
         flash("Added to wishlist!", "success")
-    return redirect(url_for('details.detail', item_type=item_type, item_id=item_id))
+    return redirect(url_for('users.wishlist'))
 
 #Remove item from Wishlist
 @users.route("/wishlist/remove/<int:item_id>", methods=['POST'])
