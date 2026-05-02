@@ -19,9 +19,9 @@
 
     <div class="detail-meta">
       {% if movie.genres %}
-        <div class="detail-tags">
-          {% for g in movie.genres %}<span class="detail-tag">{{ g }}</span>{% endfor %}
-        </div>
+      <div class="detail-tags">
+        {% for g in movie.genres %}<span class="detail-tag">{{ g }}</span>{% endfor %}
+      </div>
       {% endif %}
 
       <h1 class="detail-title">{{ movie.title }}</h1>
@@ -36,6 +36,7 @@
         {% if movie.rating %}<span class="detail-rating">★ {{ "%.1f"|format(movie.rating) }}
           {% if movie.rating_count %}<small style="font-weight:400;opacity:.7;">({{ "{:,}".format(movie.rating_count) }})</small>{% endif %}
         </span>{% endif %}
+        {% if movie.certification %}<span class="detail-cert">{{ movie.certification }}</span>{% endif %}
       </div>
 
       {% if movie.directors %}

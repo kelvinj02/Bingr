@@ -45,6 +45,16 @@
     color: var(--muted-text);
 }
 
+.detail-cert {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.55rem;
+    border-radius: 6px;
+    border: 1.5px solid var(--text-color);
+    color: var(--text-color);
+}
+
 .detail-title   { font-size: 2rem; font-weight: 700; line-height: 1.2; }
 .detail-tagline { font-size: 1rem; color: var(--muted-text); font-style: italic; }
 
