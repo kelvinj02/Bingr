@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Log In — BinGr{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">{% endblock styles %}
 {% block content %}
 <section class="auth-section">
     <div class="container auth-container">
@@ -58,4 +58,4 @@
         </div>
     </div>
 </section>
-{% endblock %}
+{% endblock content %}

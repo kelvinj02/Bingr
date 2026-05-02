@@ -22,4 +22,20 @@ document.addEventListener('DOMContentLoaded', () => {
       applyTheme(current === 'dark' ? 'light' : 'dark');
     });
   }
-})
+
+  // ── Open Library cover fallback (global) ─────────────────────────────
+  // Handles any img with a class containing "ol-cover" on every page.
+  // If the image loads as a 1px placeholder or fails, show the initials div.
+  document.querySelectorAll('img[class*="ol-cover"]').forEach(img => {
+    img.addEventListener('load', function () {
+      if (this.naturalWidth < 10) {
+        this.style.display = 'none';
+        if (this.nextElementSibling) this.nextElementSibling.style.display = 'flex';
+      }
+    });
+    img.addEventListener('error', function () {
+      this.style.display = 'none';
+      if (this.nextElementSibling) this.nextElementSibling.style.display = 'flex';
+    });
+  });
+});

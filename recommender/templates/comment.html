@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ title }} — BinGr{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">{% endblock styles %}
 
 {% block content %}
 <section class="auth-section">
@@ -51,27 +51,5 @@
   </div>
 </section>
 
-<script>
-const formStars = document.querySelectorAll('.form-star');
-const scoreInput = document.getElementById('review-score-input');
-let selectedRating = parseInt(scoreInput.value) || 0;
-
-// Initialise filled state from existing value (edit mode)
-formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
-
-formStars.forEach(star => {
-  star.addEventListener('click', () => {
-    selectedRating = parseInt(star.dataset.value);
-    scoreInput.value = selectedRating;
-    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
-  });
-  star.addEventListener('mouseover', () => {
-    const val = parseInt(star.dataset.value);
-    formStars.forEach((s, i) => s.classList.toggle('filled', i < val));
-  });
-  star.addEventListener('mouseout', () => {
-    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
-  });
-});
-</script>
-{% endblock %}
+{% endblock content %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/detail.js') }}"></script>{% endblock scripts %}

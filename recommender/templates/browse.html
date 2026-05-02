@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ page_title }} — BinGr{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/browse.css') }}">{% endblock styles %}
 
 {% block content %}
 <div class="container" style="padding-top:2rem;padding-bottom:3rem;">
@@ -75,29 +75,5 @@
 
 </div>
 
-<script>
-document.querySelectorAll('.ol-cover-browse').forEach(img => {
-  img.addEventListener('load', function() {
-    if (this.naturalWidth < 10) {
-      this.style.display = 'none';
-      this.nextElementSibling.style.display = 'flex';
-    }
-  });
-  img.addEventListener('error', function() {
-    this.style.display = 'none';
-    this.nextElementSibling.style.display = 'flex';
-  });
-});
-
-document.querySelectorAll('.filter-pill').forEach(pill => {
-  pill.addEventListener('click', () => {
-    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
-    const filter = pill.dataset.filter;
-    document.querySelectorAll('.browse-card').forEach(card => {
-      card.style.display = (filter === 'all' || card.dataset.type === filter) ? '' : 'none';
-    });
-  });
-});
-</script>
-{% endblock %}
+{% endblock content %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/browse.js') }}"></script>{% endblock scripts %}

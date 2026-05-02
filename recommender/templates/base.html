@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}BinGr{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% if title %}
+        <title>Bingr - {{ title }}</title>
+    {% else %}
+        <title>Bingr</title>
+    {% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    {% block styles %}{% endblock styles %}
 </head>
 <body>
     <header class="site-header">
@@ -26,7 +31,7 @@
                 <input type="hidden" name="type" value="all">
                 <button type="submit">🔍</button>
             </form>
-            {% endblock %}
+            {% endblock nav_search %}
 
             <div class="nav-actions">
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
@@ -71,7 +76,7 @@
 
     <main class="main-content">
         {% block content %}
-        {% endblock %}
+        {% endblock content %}
     </main>
 
     <footer class="footer">
@@ -84,5 +89,7 @@
 </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/carousel.js') }}"></script>
+    {% block scripts %}{% endblock scripts %}
 </body>
 </html>

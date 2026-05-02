@@ -1,0 +1,196 @@
+/* ── login, register, reset, onboarding, account, comment ────────────────── */
+
+.auth-section { padding: 3rem 0; }
+
+.auth-container { display: flex; justify-content: center; }
+
+.auth-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem;
+    background: var(--card-bg);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+/* legend is used as the card heading in login, register, comment */
+.auth-card legend,
+.auth-card h1 {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.auth-subtext { color: var(--muted-text); margin-bottom: 1.5rem; }
+
+.auth-form  { display: grid; gap: 1rem; }
+
+.form-group { display: grid; gap: 0.4rem; }
+.form-label { font-weight: 700; }
+
+.form-input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    outline: none;
+}
+
+.form-error { color: #dc2626; font-size: 0.9rem; }
+
+/* remember-me checkbox row */
+.form-check        { display: flex; align-items: center; gap: 0.5rem; }
+.form-check-input  { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--primary); }
+.form-check-label  { font-size: 0.9rem; cursor: pointer; }
+
+.checkbox-row  { margin-top: -0.25rem; }
+.checkbox-label { display: flex; align-items: center; gap: 0.5rem; }
+
+.auth-switch     { margin-top: 1rem; color: var(--muted-text); }
+.auth-switch a   { color: var(--primary); font-weight: 700; }
+
+/* ── quick-search form (on home, repurposed as auth-area search) ─────────── */
+.quick-search { padding: 3rem 0; }
+
+.search-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.search-form input,
+.search-form select {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    outline: none;
+}
+
+.search-form input { flex: 1; min-width: 250px; }
+
+/* ── onboarding genre pills ──────────────────────────────────────────────── */
+.genre-chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.genre-chip {
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.genre-chip input[type="checkbox"] { display: none; }
+
+.genre-chip:has(input:checked),
+.genre-chip.selected {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+/* ── account page ────────────────────────────────────────────────────────── */
+.account-section { padding: 2.5rem 0; }
+
+.account-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.account-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.account-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #b49cff);
+    color: #fff;
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.ratings-list,
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+}
+
+.rating-row,
+.comment-row {
+    background: var(--bg-color);
+    border-radius: 10px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.88rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.rating-title,
+.comment-title { font-weight: 600; }
+
+.rating-score { color: #f59e0b; font-weight: 600; }
+
+/* ── comment / review form page ──────────────────────────────────────────── */
+.comment-section { padding: 2.5rem 0; }
+
+.comment-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-stars {
+    display: flex;
+    gap: 0.2rem;
+}
+
+.form-star {
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: var(--border);
+    transition: color 0.15s;
+    line-height: 1;
+}
+
+.form-star.filled { color: #f59e0b; }
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+    .account-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .search-form { flex-direction: column; }
+}

@@ -1,0 +1,37 @@
+/* ── browse.html / recommendations.html / movie_recommendations.html ──────── */
+
+.page-top { padding-top: 2rem; }
+
+/* carousel card variants used on recommendation pages */
+.carousel-card {
+    scroll-snap-align: start;
+    flex: 0 0 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease;
+}
+
+.carousel-card:hover { transform: translateY(-3px); }
+
+.carousel-cover {
+    width: 160px;
+    height: 220px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.book-cover-placeholder  { background: linear-gradient(135deg, var(--primary), #b49cff); }
+.movie-cover-placeholder { background: linear-gradient(135deg, #f97316, #fb923c); }
+
+.carousel-title  { font-size: 0.85rem; font-weight: 600; line-height: 1.3; }
+.carousel-sub    { font-size: 0.78rem; color: var(--muted-text); line-height: 1.3; }
+.carousel-rating { font-size: 0.78rem; color: var(--primary); font-weight: 600; }

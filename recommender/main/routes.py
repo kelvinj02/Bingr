@@ -86,7 +86,8 @@ def search():
                     'poster_url': m.get('poster_url'),
                 })
 
-    return render_template('search_result.html', results=results, query=q, filter_type=filter_type)
+    return render_template('search_result.html', results=results, query=q, filter_type=filter_type,
+                           title=('Search: ' + q) if q else 'Search')
 
 
 def _personalized_movie_items(top_n=20):
@@ -144,7 +145,7 @@ def recommendations():
     random.shuffle(items)
 
     return render_template('browse.html', items=items, filter_type='all',
-                           page_title='Recommendations')
+                           page_title='Recommendations', title='Recommendations')
 
 
 @main.route("/trending")
@@ -157,7 +158,7 @@ def trending():
     random.shuffle(items)
 
     return render_template('browse.html', items=items, filter_type='all',
-                           page_title='Trending')
+                           page_title='Trending', title='Trending')
 
 
 @main.route("/browse")
@@ -172,4 +173,4 @@ def top_recommendations():
     random.shuffle(items)
 
     return render_template('browse.html', items=items, filter_type=filter_type,
-                           page_title='Top Recommendations')
+                           page_title='Top Recommendations', title='Top Recommendations')
