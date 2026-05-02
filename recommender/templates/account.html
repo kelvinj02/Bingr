@@ -27,9 +27,12 @@
 
             <div class="account-actions">
 
-                <a href="{{ url_for('users.reset_request') }}" class="btn btn-outline">
-                    Reset Password
-                </a>
+                <div>
+                    {{ form.submit(class="btn btn-primary btn-full") }}
+                    <small>
+                        <a href="{{ url_for('users.reset_request') }}">Reset Pasword</a>
+                    </small>
+                </div>
 
                 <a href="{{ url_for('users.logout') }}" class="btn btn-danger">
                     Logout
