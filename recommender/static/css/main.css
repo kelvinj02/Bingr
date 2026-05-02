@@ -36,6 +36,20 @@
     --warning-text: #fef3c7;
 }
 
+
+.custom-background {
+  background-image: url('Michael.webp') ;
+  background-color: #f0f0f0; 
+
+ 
+  background-size: cover;       
+  background-repeat: no-repeat; 
+  background-position: center;  
+  
+  padding: 50px;
+  min-height: 300px;
+}
+
 * {
     margin: 0;
     padding: 0;

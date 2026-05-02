@@ -5,7 +5,7 @@
 <section class="hero">
   <div class="container">
     <span class="hero-eyebrow">Movies &amp; Books · Curated for you</span>
-    <h1>Your next favourite<br><em>starts here.</em></h1>
+    <h1>Your next favorite<br><em>starts here.</em></h1>
     <p style="color:var(--muted-text);max-width:520px;margin:1rem 0 1.5rem;">Discover top-rated movies and books, track what you want to watch or read, and share your reviews.</p>
     <div class="hero-buttons">
       <a href="{{ url_for('main.top_recommendations') }}" class="btn btn-primary">Browse All</a>
@@ -15,6 +15,9 @@
     </div>
   </div>
 </section>
+
+
+
 
 <!-- shared macro for a single card -->
 {% macro render_card(item) %}
