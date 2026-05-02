@@ -13,8 +13,21 @@
     <div class="wishlist-grid">
       {% for item in items %}
         <div class="wishlist-card">
-          <div class="wishlist-cover {% if item.item_type == 'movie' %}movie-placeholder{% else %}book-placeholder{% endif %}">
-            {{ item.title[:2].upper() }}
+          <div class="wishlist-cover">
+            {% if item.item_type == 'movie' and posters[item.id] %}
+              <img src="{{ posters[item.id] }}" alt="{{ item.title }}"
+                   style="width:100%;height:100%;object-fit:cover;border-radius:8px;"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="cover-initials movie-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
+            {% elif item.item_type == 'book' %}
+              <img src="https://covers.openlibrary.org/b/title/{{ item.title | url_encode_title }}-L.jpg"
+                   alt="{{ item.title }}" class="ol-cover-wish"
+                   style="width:100%;height:100%;object-fit:cover;border-radius:8px;"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+              <div class="cover-initials book-placeholder" style="display:none;">{{ item.title[:2].upper() }}</div>
+            {% else %}
+              <div class="cover-initials movie-placeholder" style="display:flex;">{{ item.title[:2].upper() }}</div>
+            {% endif %}
           </div>
 
           <div class="wishlist-info">

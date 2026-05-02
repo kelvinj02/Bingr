@@ -36,7 +36,7 @@
         {% if movie.rating %}<span class="detail-rating">★ {{ "%.1f"|format(movie.rating) }}
           {% if movie.rating_count %}<small style="font-weight:400;opacity:.7;">({{ "{:,}".format(movie.rating_count) }})</small>{% endif %}
         </span>{% endif %}
-        {% if movie.certification %}<span class="detail-cert">{{ movie.certification }}</span>{% endif %}
+        <span class="detail-cert">{{ movie.certification if movie.certification else 'N/A' }}</span>
       </div>
 
       {% if movie.directors %}

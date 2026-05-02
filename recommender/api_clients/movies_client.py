@@ -289,6 +289,7 @@ def search_movies(query: str, max_results: int = 15) -> list[dict]:
         return []
 
 
+@cache.memoize(timeout=86400)
 def get_movie_poster(movie_id: int) -> Optional[str]:
     url = f"{TMDB_BASE_URL}/movie/{movie_id}"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
