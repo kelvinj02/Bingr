@@ -1,24 +1,55 @@
-{%extends 'base.html' %}
-{% block title %}My Account — BinGr {% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Account | BinGr{% endblock %}
 
 {% block content %}
+<section class="account-section">
+    <div class="container account-container">
 
-    <div class="container">
-        <div class="account-header">
-    <div class="account-avatar">{{ current_user.username[0].upper() }}</div>
-    <h1 style="font-size:1.8rem;">{{ current_user.username }}</h1>
-    <p style="color:var(--text3);font-size:0.875rem;">{{ current_user.email }}</p>
-    
-    <div class="stats-row">
-      <div class="stat-item">
-        <div class="stat-num">{{ ratings|length }}</div>
-        <div class="stat-label">Ratings</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">{{ comments|length }}</div>
-        <div class="stat-label">Reviews</div>
-      </div>
+        <!-- Profile Card -->
+        <div class="account-card">
+            <div class="account-header">
+                <h1>Your Account</h1>
+                <p class="account-subtext">Manage your profile and preferences</p>
+            </div>
+
+            <div class="account-info">
+                <div class="info-row">
+                    <span class="info-label">Username:</span>
+                    <span class="info-value">{{ current_user.username }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ current_user.email }}</span>
+                </div>
+            </div>
+
+            <div class="account-actions">
+
+                <a href="{{ url_for('users.reset_request') }}" class="btn btn-outline">
+                    Reset Password
+                </a>
+
+                <a href="{{ url_for('users.logout') }}" class="btn btn-danger">
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Preferences / Activity -->
+        <div class="account-extra">
+
+            <div class="extra-card">
+                <h2>Your Activity</h2>
+                <ul class="activity-list">
+                    <li>Saved movies: <strong>Coming soon</strong></li>
+                    <li>Saved books: <strong>Coming soon</strong></li>
+                    <li>Ratings: <strong>Coming soon</strong></li>
+                </ul>
+            </div>
+        </div>
+
     </div>
-</div>
-</div>
-{% endblock content %}
+</section>
+{% endblock %}
