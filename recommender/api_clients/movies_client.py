@@ -48,7 +48,7 @@ def _get_genre_ids(genres: list[str]) -> list[int]:
     return ids
 
 
-@cache.memoize(timeout=86400)
+@cache.memoize(timeout=900)
 def _search_movie_id(title: str) -> Optional[int]:
     """Look up a movie's TMDB ID by title, used to find similar movies."""
     url = f"{TMDB_BASE_URL}/search/movie"
@@ -66,7 +66,7 @@ def _search_movie_id(title: str) -> Optional[int]:
         return None
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def _get_similar_movies(movie_id: int, max_results: int) -> list[dict]:
     """Fetch movies similar to a given TMDB movie ID."""
     url = f"{TMDB_BASE_URL}/movie/{movie_id}/similar"
@@ -79,7 +79,7 @@ def _get_similar_movies(movie_id: int, max_results: int) -> list[dict]:
         return []
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def _discover_movies(genre_ids: list[int], max_results: int) -> list[dict]:
     """Discover movies by genre using TMDB's discover endpoint."""
     url = f"{TMDB_BASE_URL}/discover/movie"
@@ -191,7 +191,7 @@ def get_movie(movie_id: str) -> Optional[dict]:
     except Exception:
         return None
 
-@cache.memoize(timeout=600)
+@cache.memoize(timeout=900)
 def get_trending_movies(max_results: int = 5) -> list[dict]:
     url = f"{TMDB_BASE_URL}/trending/movie/week"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
@@ -231,7 +231,7 @@ def _get_certification(movie_id: int) -> Optional[str]:
     return None
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def get_movie_full(movie_id: int) -> Optional[dict]:
     """Fetch full movie detail + cast/crew + certification from TMDB."""
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
@@ -289,7 +289,7 @@ def search_movies(query: str, max_results: int = 15) -> list[dict]:
         return []
 
 
-@cache.memoize(timeout=86400)
+@cache.memoize(timeout=900)
 def get_movie_poster(movie_id: int) -> Optional[str]:
     url = f"{TMDB_BASE_URL}/movie/{movie_id}"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}

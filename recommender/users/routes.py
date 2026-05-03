@@ -1,5 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, Blueprint, abort, current_app
 from flask_login import login_user, current_user, logout_user, login_required
+from types import SimpleNamespace
 from recommender import db, bcrypt
 from recommender.models import User, WishListItem, UserPreference, Comment, UserBook, UserMovie
 from recommender.users.forms import (RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, UpdateAccountForm)
@@ -53,8 +54,37 @@ def account():
                                            UserBook.rating.isnot(None)).all()
     movie_ratings = UserMovie.query.filter(UserMovie.user_id == current_user.id,
                                            UserMovie.rating.isnot(None)).all()
-    ratings  = book_ratings + movie_ratings
-    comments = Comment.query.filter_by(user_id=current_user.id).all()
+
+    ratings = []
+    for r in book_ratings:
+        ratings.append(SimpleNamespace(
+            item_type='book', item_id=r.book_title, title=r.book_title,
+            score=r.rating * 2, author=None, director=None,
+        ))
+    for r in movie_ratings:
+        ratings.append(SimpleNamespace(
+            item_type='movie', item_id=r.movie_title, title=r.movie_title,
+            score=r.rating * 2, author=None, director=None,
+        ))
+
+    raw_comments = Comment.query.filter_by(user_id=current_user.id).all()
+    comments = []
+    for c in raw_comments:
+        if c.item_type == 'movie':
+            try:
+                df = current_app.movie_recommender.df
+                matches = df[df['movie_id'] == int(c.item_id)]
+                display_title = matches.iloc[0]['title'] if not matches.empty else c.item_id
+            except Exception:
+                display_title = c.item_id
+        else:
+            display_title = c.item_id
+        comments.append(SimpleNamespace(
+            id=c.id, item_type=c.item_type, item_id=c.item_id,
+            display_title=display_title, content=c.content,
+            review_score=c.review_score, created_at=c.created_at,
+        ))
+
     return render_template('account.html', title='Account', form=form,
                            ratings=ratings, comments=comments)
 
@@ -167,6 +197,38 @@ def remove_wishlist(item_id):
     db.session.commit()
     flash("Removed from wishlist.", "info")
     return redirect(url_for('users.wishlist'))
+
+@users.route("/account/update-username", methods=['POST'])
+@login_required
+def update_username():
+    new_name = request.form.get('username', '').strip()
+    if not new_name or not (3 <= len(new_name) <= 20):
+        flash('Username must be between 3 and 20 characters.', 'danger')
+        return redirect(url_for('users.account'))
+    taken = User.query.filter_by(username=new_name).first()
+    if taken and taken.id != current_user.id:
+        flash('That username is already taken.', 'danger')
+        return redirect(url_for('users.account'))
+    current_user.username = new_name
+    db.session.commit()
+    flash('Username updated!', 'success')
+    return redirect(url_for('users.account'))
+
+
+@users.route("/account/delete", methods=['POST'])
+@login_required
+def delete_account():
+    from recommender.models import SearchHistory
+    user = current_user._get_current_object()
+    Comment.query.filter_by(user_id=user.id).delete()
+    WishListItem.query.filter_by(user_id=user.id).delete()
+    SearchHistory.query.filter_by(user_id=user.id).delete()
+    logout_user()
+    db.session.delete(user)
+    db.session.commit()
+    flash('Your account has been deleted.', 'info')
+    return redirect(url_for('main.home'))
+
 
 @users.route("/logout")
 def logout():

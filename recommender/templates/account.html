@@ -69,7 +69,7 @@
       {% if ratings %}
       <div class="activity-list">
         {% for r in ratings %}
-        <a href="{{ url_for('main.detail', item_type=r.item_type, item_id=r.item_id) }}" class="activity-card">
+        <a href="{{ url_for('movies.detail', title=r.title) if r.item_type == 'movie' else url_for('books.detail', title=r.title) }}" class="activity-card">
           <div class="activity-cover {{ r.item_type }}-placeholder cover-initials">
             {{ r.title[0] if r.title else '?' }}
           </div>
@@ -105,14 +105,14 @@
       {% if comments %}
       <div class="activity-list">
         {% for c in comments %}
-        <a href="{{ url_for('main.detail', item_type=c.item_type, item_id=c.item_id) }}" class="activity-card activity-card--review">
+        <a href="{{ url_for('movies.detail', title=c.display_title) if c.item_type == 'movie' else url_for('books.detail', title=c.display_title) }}" class="activity-card activity-card--review">
           <div class="activity-cover {{ c.item_type }}-placeholder cover-initials">
-            {{ c.title[0] if c.title else '?' }}
+            {{ c.display_title[0] if c.display_title else '?' }}
           </div>
           <div class="activity-info">
             <span class="activity-type">{{ c.item_type | capitalize }}</span>
-            <span class="activity-title">{{ c.title }}</span>
-            <span class="activity-review-body">{{ c.body | truncate(120) }}</span>
+            <span class="activity-title">{{ c.display_title }}</span>
+            <span class="activity-review-body">{{ c.content | truncate(120) }}</span>
           </div>
           <div class="activity-arrow">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -134,35 +134,46 @@
       <div class="settings-grid">
         <div class="settings-card">
           <h3 class="settings-title">Account Info</h3>
-          <div class="settings-row">
-            <span class="settings-label">Username</span>
-            <span class="settings-value">{{ current_user.username }}</span>
-          </div>
-          <div class="settings-row">
-            <span class="settings-label">Email</span>
-            <span class="settings-value">{{ current_user.email }}</span>
-          </div>
-          <div class="settings-row">
-            <span class="settings-label">Member since</span>
-            <span class="settings-value">2026</span>
-          </div>
+          <form action="{{ url_for('users.update_username') }}" method="POST">
+            {{ form.hidden_tag() }}
+            <div class="settings-row">
+              <span class="settings-label">Username</span>
+              <input type="text" name="username" class="settings-input"
+                     placeholder="{{ current_user.username }}" maxlength="20" autocomplete="off">
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Email</span>
+              <span class="settings-value">{{ current_user.email }}</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Member since</span>
+              <span class="settings-value">2026</span>
+            </div>
+            <button type="submit" class="settings-save-btn">Save Changes</button>
+          </form>
         </div>
-        <div class="settings-card">
-          <h3 class="settings-title">Quick Actions</h3>
-          <div class="settings-actions">
-            <a href="{{ url_for('users.wishlist') }}" class="settings-action-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              View Wishlist
-            </a>
-            <a href="{{ url_for('main.top_recommendations') }}" class="settings-action-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              Discover More
-            </a>
-            <a href="{{ url_for('users.logout') }}" class="settings-action-btn settings-action-btn--danger">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Log Out
-            </a>
-          </div>
+        <div class="settings-card settings-card--danger-zone">
+          <h3 class="settings-title">Danger Zone</h3>
+          <p class="settings-danger-desc">Permanently deletes your account and all associated data including ratings, reviews, and wishlist items. This cannot be undone.</p>
+          <button type="button" class="settings-action-btn settings-action-btn--danger" id="delete-account-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- delete confirmation modal -->
+    <div class="modal-overlay" id="delete-modal" aria-hidden="true">
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <h3 class="modal-title">Delete your account?</h3>
+        <p class="modal-body">All your ratings, reviews, and wishlist items will be permanently removed. This cannot be undone.</p>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn modal-btn--cancel" id="delete-cancel">Cancel</button>
+          <form action="{{ url_for('users.delete_account') }}" method="POST">
+            {{ form.hidden_tag() }}
+            <button type="submit" class="modal-btn modal-btn--confirm">Yes, delete it</button>
+          </form>
         </div>
       </div>
     </div>
@@ -178,6 +189,28 @@
       tab.classList.add('active');
       document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
     });
+  });
+
+  const deleteModal  = document.getElementById('delete-modal');
+  const deleteBtn    = document.getElementById('delete-account-btn');
+  const cancelBtn    = document.getElementById('delete-cancel');
+
+  deleteBtn.addEventListener('click', () => {
+    deleteModal.classList.add('open');
+    deleteModal.setAttribute('aria-hidden', 'false');
+  });
+
+  function closeModal() {
+    deleteModal.classList.remove('open');
+    deleteModal.setAttribute('aria-hidden', 'true');
+  }
+
+  cancelBtn.addEventListener('click', closeModal);
+  deleteModal.addEventListener('click', e => {
+    if (e.target === deleteModal) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
   });
 </script>
 {% endblock content %}

@@ -403,6 +403,131 @@
     color: #fff;
 }
 
+/* ── settings input & save button ───────────────────────────────────────── */
+.settings-input {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-color);
+    background: var(--bg-color);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.35rem 0.7rem;
+    width: 180px;
+    outline: none;
+    transition: border-color 0.18s;
+}
+
+.settings-input:focus { border-color: var(--primary); }
+
+.settings-save-btn {
+    margin-top: 1.1rem;
+    width: 100%;
+    padding: 0.72rem 1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.18s;
+}
+
+.settings-save-btn:hover { opacity: 0.88; }
+
+/* ── danger zone card ────────────────────────────────────────────────────── */
+.settings-card--danger-zone {
+    border-color: #fca5a5;
+}
+
+[data-theme="dark"] .settings-card--danger-zone { border-color: #7f1d1d; }
+
+.settings-danger-desc {
+    font-size: 0.83rem;
+    color: var(--muted-text);
+    line-height: 1.55;
+    margin-bottom: 1.1rem;
+}
+
+/* ── delete confirmation modal ───────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 2rem;
+    width: min(420px, 90vw);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    transform: translateY(12px) scale(0.97);
+    transition: transform 0.22s ease;
+}
+
+.modal-overlay.open .modal-box {
+    transform: translateY(0) scale(1);
+}
+
+.modal-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.6rem;
+}
+
+.modal-body {
+    font-size: 0.88rem;
+    color: var(--muted-text);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 0.62rem 1.3rem;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.18s;
+}
+
+.modal-btn--cancel {
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 1.5px solid var(--border);
+}
+
+.modal-btn--cancel:hover { border-color: var(--primary); color: var(--primary); }
+
+.modal-btn--confirm {
+    background: #dc2626;
+    color: #fff;
+}
+
+.modal-btn--confirm:hover { opacity: 0.88; }
+
 /* ── responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 800px) {
     .profile-stats-row { margin-left: 0; width: 100%; justify-content: center; }

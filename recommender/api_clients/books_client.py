@@ -47,7 +47,7 @@ def _upgrade_cover_url(url: Optional[str]) -> Optional[str]:
     return url
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def _get_openlibrary_cover(title: str) -> Optional[str]:
     """Search Open Library for a large cover image by title."""
     try:
@@ -96,7 +96,7 @@ def _build_query(
     return "+".join(parts) if parts else "bestseller fiction"
 
 
-@cache.memoize(timeout=600)
+@cache.memoize(timeout=900)
 def get_book_recommendations(
     favorites: list[str] = None,
     genres: list[str] = None,
@@ -212,7 +212,7 @@ def get_book(book_id: str) -> Optional[dict]:
     except Exception:
         return None
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def get_book_characters(title: str) -> list[str]:
     """Return character names for a book via Open Library subject_people field."""
     try:
@@ -230,7 +230,7 @@ def get_book_characters(title: str) -> list[str]:
         return []
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def get_book_by_title(title: str) -> Optional[dict]:
     """Search Google Books by title and return a book dict keyed like the ML dataframe."""
     # Try exact intitle search first, then a plain keyword search as fallback
@@ -269,7 +269,7 @@ def get_book_by_title(title: str) -> Optional[dict]:
     return None
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def get_book_cover(title: str) -> str:
     # Strip series info "(Series, #N)" and subtitle after ":" or "—"
     clean = re.sub(r'\s*[\(\[].*?[\)\]]', '', title).strip()
@@ -308,7 +308,7 @@ _TRENDING_GENRE_QUERIES = [
 ]
 
 
-@cache.memoize(timeout=3600)
+@cache.memoize(timeout=900)
 def get_trending_books(max_results: int = 20) -> list[dict]:
     """
     Fetch trending new-release books from Google Books across all genres.
