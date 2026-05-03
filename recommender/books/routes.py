@@ -34,9 +34,14 @@ def _book_in_wishlist(title):
 @books.route('/recommendations')
 @login_required
 def recommendations():
+    from recommender.api_clients.books_client import get_book_cover
     interactions = _get_interactions()
     genres = _get_genres()
-    recs = current_app.recommender.get_personalized(interactions, genres, top_n=50)
+    recs = current_app.recommender.get_personalized(interactions, genres, top_n=100)
+    for b in recs:
+        if not b.get('thumbnail'):
+            b['thumbnail'] = get_book_cover(b['title'])
+    recs = [b for b in recs if b.get('thumbnail')][:50]
     mode = "Based on your taste" if len(interactions) >= 3 else "Top picks for you"
 
     interacted_titles = {i["title"] for i in interactions}

@@ -23,19 +23,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── Open Library cover fallback (global) ─────────────────────────────
-  // Handles any img with a class containing "ol-cover" on every page.
-  // If the image loads as a 1px placeholder or fails, show the initials div.
-  document.querySelectorAll('img[class*="ol-cover"]').forEach(img => {
-    img.addEventListener('load', function () {
-      if (this.naturalWidth < 10) {
-        this.style.display = 'none';
-        if (this.nextElementSibling) this.nextElementSibling.style.display = 'flex';
-      }
-    });
-    img.addEventListener('error', function () {
+  // ── Cover image fallback (global) ────────────────────────────────────
+  // Covers ol-cover fallback images AND direct thumbnail imgs in cover containers.
+  // Hides 1px OL placeholders (naturalWidth < 10) and broken images, then shows
+  // the initials sibling div. Also checks img.complete for browser-cached images
+  // that have already loaded before this listener was attached.
+  const hidePlaceholder = function () {
+    if (this.naturalWidth < 10) {
       this.style.display = 'none';
       if (this.nextElementSibling) this.nextElementSibling.style.display = 'flex';
-    });
+    }
+  };
+  const hideBroken = function () {
+    this.style.display = 'none';
+    if (this.nextElementSibling) this.nextElementSibling.style.display = 'flex';
+  };
+  document.querySelectorAll(
+    'img[class*="ol-cover"], .browse-cover img, .book-cover img, .wishlist-cover img, .detail-poster img, .similar-cover img'
+  ).forEach(img => {
+    if (img.complete) {
+      hidePlaceholder.call(img);
+    } else {
+      img.addEventListener('load', hidePlaceholder);
+    }
+    img.addEventListener('error', hideBroken);
   });
 });

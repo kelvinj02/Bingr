@@ -4,7 +4,7 @@ from flask_login import current_user
 from recommender import db
 from recommender.models import UserBook, UserMovie, UserPreference, WishListItem, SearchHistory
 from recommender.api_clients.movies_client import get_trending_movies, get_movie_recommendations, search_movies
-from recommender.api_clients.books_client import get_book_recommendations
+from recommender.api_clients.books_client import get_book_recommendations, get_trending_books
 
 main = Blueprint('main', __name__)
 
@@ -32,14 +32,16 @@ def home():
     rec_books_raw  = _personalized_book_items(top_n=5)
 
     trend_movies_raw = all_trending[5:]
-    trend_books_raw  = [_norm_book(b) for b in get_book_recommendations(max_results=5)]
+    trend_books_raw  = [_norm_book(b) for b in get_trending_books(max_results=5)]
 
     rec_items = ([{"kind": "movie", **m} for m in rec_movies_raw] +
                  [{"kind": "book",  **b} for b in rec_books_raw])
     random.shuffle(rec_items)
 
+    rec_titles = {i["title"] for i in rec_items}
+    trend_books_deduped = [b for b in trend_books_raw if b["title"] not in rec_titles]
     trend_items = ([{"kind": "movie", **_norm_movie(m)} for m in trend_movies_raw] +
-                   [{"kind": "book",  **b} for b in trend_books_raw])
+                   [{"kind": "book",  **b} for b in trend_books_deduped])
     random.shuffle(trend_items)
 
     return render_template("index.html", rec_items=rec_items, trend_items=trend_items)
@@ -116,6 +118,7 @@ def _personalized_movie_items(top_n=20):
 
 def _personalized_book_items(top_n=20):
     """Return personalized ML book items for authenticated users, popular otherwise."""
+    from recommender.api_clients.books_client import get_book_cover
     if current_user.is_authenticated:
         book_rows     = UserBook.query.filter_by(user_id=current_user.id).all()
         wishlist_rows = WishListItem.query.filter_by(user_id=current_user.id).all()
@@ -129,8 +132,19 @@ def _personalized_book_items(top_n=20):
             if w.item_type == 'book' and w.title not in existing:
                 book_interactions.append({"title": w.title, "status": "saved", "rating": None})
 
-        raw = current_app.recommender.get_personalized(book_interactions, genres, top_n=top_n)
-        return [_norm_book(b) for b in raw]
+        raw = current_app.recommender.get_personalized(book_interactions, genres, top_n=top_n * 2)
+        books, seen = [], set()
+        for b in [_norm_book(b) for b in raw]:
+            if b['title'] in seen:
+                continue
+            if not b.get('thumbnail'):
+                b['thumbnail'] = get_book_cover(b['title'])
+            if b.get('thumbnail'):
+                seen.add(b['title'])
+                books.append(b)
+            if len(books) >= top_n:
+                break
+        return books
 
     return [_norm_book(b) for b in get_book_recommendations(max_results=top_n)]
 
@@ -151,7 +165,7 @@ def recommendations():
 @main.route("/trending")
 def trending():
     movies_raw = get_trending_movies(20)
-    books_raw  = [_norm_book(b) for b in get_book_recommendations(max_results=20)]
+    books_raw  = [_norm_book(b) for b in get_trending_books(max_results=20)]
 
     items = ([{"kind": "movie", **_norm_movie(m)} for m in movies_raw] +
              [{"kind": "book",  **b} for b in books_raw])

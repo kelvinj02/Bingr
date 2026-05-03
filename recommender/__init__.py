@@ -45,6 +45,7 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
+        cache.clear()
 
     from recommender.ml.recommender import BookRecommender
     csv_path = os.path.join(os.path.dirname(__file__), 'api_clients', 'goodreads_data.csv')

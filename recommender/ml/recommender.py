@@ -97,7 +97,9 @@ class BookRecommender:
 
         candidates = candidates[~candidates["Book"].isin(exclude)]
         candidates = candidates.sort_values("quality_score", ascending=False)
-        return self._format_results(candidates.head(top_n))
+        # Fetch a large pool first, then diversify to avoid one author dominating
+        pool = self._format_results(candidates.head(top_n * 5))
+        return self._diversify(pool, top_n, max_per_author=2)
 
     def get_personalized(self, interactions: list, genres: list, top_n: int = 20) -> list:
         exclude = {i["title"] for i in interactions}
@@ -205,6 +207,18 @@ class BookRecommender:
         weights = np.array(weights)
         weighted = sum(w * v for w, v in zip(weights, vectors))
         return weighted / weights.sum()
+
+    def _diversify(self, results: list, top_n: int, max_per_author: int = 2) -> list:
+        seen = {}
+        diverse = []
+        for book in results:
+            author = book.get("author", "")
+            if seen.get(author, 0) < max_per_author:
+                diverse.append(book)
+                seen[author] = seen.get(author, 0) + 1
+            if len(diverse) >= top_n:
+                break
+        return diverse
 
     def _format_results(self, df_slice: pd.DataFrame, score_col: str = "quality_score") -> list:
         results = []
