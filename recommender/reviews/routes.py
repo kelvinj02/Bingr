@@ -28,7 +28,9 @@ def comment(item_type, item_id):
             db.session.add(new_comment)
             db.session.commit()
             flash("Your review has been posted!", "success")
-            return redirect(url_for('details.detail', item_type=item_type, item_id=item_id))
+            if item_type == 'movie':
+                return redirect(url_for('movies.detail', title=item_id))
+            return redirect(url_for('books.detail', title=item_id))
     return render_template("comment.html", title="New Comment", form=form)
 
 #Update comment

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Search: {{ query }} — Bingr{% endblock %}
-{% block nav_search %}{% endblock %}
+{% block nav_search %}{% endblock nav_search %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">{% endblock styles %}
 
 {% block content %}
 <div class="container page-top">
@@ -48,26 +48,5 @@
 
 </div>
 
-<script>
-document.querySelectorAll('.ol-cover-search').forEach(img => {
-  img.addEventListener('load', function() {
-    if (this.naturalWidth < 10) {
-      this.style.display = 'none';
-      this.nextElementSibling.style.display = 'flex';
-    }
-  });
-  img.addEventListener('error', function() {
-    this.style.display = 'none';
-    this.nextElementSibling.style.display = 'flex';
-  });
-});
-
-// filter pills update the hidden type input and re-submit
-document.querySelectorAll('.filter-pill').forEach(pill => {
-  pill.addEventListener('click', () => {
-    document.getElementById('filter-type-input').value = pill.dataset.value;
-    pill.closest('form').submit();
-  });
-});
-</script>
-{% endblock %}
+{% endblock content %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/search.js') }}"></script>{% endblock scripts %}

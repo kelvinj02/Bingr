@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">{% endblock styles %}
 {% block content %}
 <div class="container">
     <div class="search-header">
@@ -42,20 +43,5 @@
     {% endif %}
 </div>
 
-<script>
-document.querySelectorAll('.interact-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const res = await fetch('/movies/interact', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({title: btn.dataset.title, action: btn.dataset.action})
-        });
-        const data = await res.json();
-        if (!data.ok) return;
-        if (data.status === 'saved') btn.textContent = 'Saved ✓';
-        else if (data.status === 'removed') btn.textContent = '+ Save';
-        else if (data.status === 'watched') btn.textContent = 'Watched ✓';
-    });
-});
-</script>
-{% endblock %}
+{% endblock content %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/movie-interact.js') }}"></script>{% endblock scripts %}

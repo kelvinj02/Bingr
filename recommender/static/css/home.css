@@ -1,0 +1,119 @@
+/* ── home / index.html ───────────────────────────────────────────────────── */
+
+/* ── hero ────────────────────────────────────────────────────────────────── */
+.hero { padding: 4rem 0 3rem; }
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2rem;
+    align-items: center;
+}
+
+.hero-eyebrow {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.hero-text h1 {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    line-height: 1.15;
+}
+
+.hero-text h1 em {
+    font-style: italic;
+    color: var(--primary);
+}
+
+.hero-text p {
+    color: var(--muted-text);
+    margin-bottom: 1.5rem;
+    max-width: 560px;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.hero-placeholder {
+    min-height: 320px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--primary), #b49cff);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    font-weight: 700;
+    box-shadow: var(--shadow);
+}
+
+/* ── features ────────────────────────────────────────────────────────────── */
+.features { padding: 3rem 0; }
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.feature-box {
+    background: var(--card-bg);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+}
+
+.feature-box h3 { margin-bottom: 0.75rem; }
+
+/* ── cta ─────────────────────────────────────────────────────────────────── */
+.cta { padding: 3rem 0; }
+
+.cta-content {
+    background: var(--card-bg);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.cta-content h2  { margin-bottom: 0.75rem; }
+.cta-content p   { color: var(--muted-text); margin-bottom: 1rem; }
+
+/* ── genre pills (home page only) ────────────────────────────────────────── */
+.genres { padding: 3rem 0; }
+
+.genre-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.genre-pill {
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    transition: 0.25s ease;
+}
+
+.genre-pill:hover { background: var(--primary); color: #fff; }
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .hero-content { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .hero-text h1 { font-size: 2rem; }
+}

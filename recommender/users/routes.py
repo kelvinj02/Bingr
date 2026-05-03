@@ -122,8 +122,18 @@ def onboarding():
 @users.route("/wishlist", methods=['GET'])
 @login_required
 def wishlist():
+    from recommender.api_clients.movies_client import get_movie_poster
     items = WishListItem.query.filter_by(user_id=current_user.id).all()
-    return render_template("wishlist.html", title="My Wishlist", items=items)
+    posters = {}
+    for item in items:
+        if item.item_type == 'movie':
+            try:
+                posters[item.id] = get_movie_poster(int(item.item_id))
+            except (ValueError, TypeError):
+                posters[item.id] = None
+        else:
+            posters[item.id] = None
+    return render_template("wishlist.html", title="My Wishlist", items=items, posters=posters)
 
 #Add items to Wishlist
 @users.route("/wishlist/add/<item_type>/<item_id>", methods=['POST'])
@@ -144,7 +154,7 @@ def add_to_wishlist(item_type, item_id):
         db.session.add(item)
         db.session.commit()
         flash("Added to wishlist!", "success")
-    return redirect(url_for('details.detail', item_type=item_type, item_id=item_id))
+    return redirect(url_for('users.wishlist'))
 
 #Remove item from Wishlist
 @users.route("/wishlist/remove/<int:item_id>", methods=['POST'])

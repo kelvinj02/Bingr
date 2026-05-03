@@ -34,9 +34,14 @@ def _book_in_wishlist(title):
 @books.route('/recommendations')
 @login_required
 def recommendations():
+    from recommender.api_clients.books_client import get_book_cover
     interactions = _get_interactions()
     genres = _get_genres()
-    recs = current_app.recommender.get_personalized(interactions, genres, top_n=50)
+    recs = current_app.recommender.get_personalized(interactions, genres, top_n=100)
+    for b in recs:
+        if not b.get('thumbnail'):
+            b['thumbnail'] = get_book_cover(b['title'])
+    recs = [b for b in recs if b.get('thumbnail')][:50]
     mode = "Based on your taste" if len(interactions) >= 3 else "Top picks for you"
 
     interacted_titles = {i["title"] for i in interactions}
@@ -48,7 +53,8 @@ def recommendations():
         ).all()
         statuses = {r.book_title: (r.status, r.rating) for r in rows}
 
-    return render_template('recommendations.html', books=recs, mode=mode, statuses=statuses)
+    return render_template('recommendations.html', books=recs, mode=mode, statuses=statuses,
+                           title='Book Recommendations')
 
 
 # /books/wishlist must be defined BEFORE /books/<path:title>
@@ -128,7 +134,8 @@ def detail(title):
     return render_template('book_details.html', book=book, similar=similar,
                            in_wishlist=in_wishlist, user_status=status,
                            user_rating=user_rating, cover_url=cover_url,
-                           characters=characters, comments=comments, form=form)
+                           characters=characters, comments=comments, form=form,
+                           title=book['Book'])
 
 
 @books.route('/search')

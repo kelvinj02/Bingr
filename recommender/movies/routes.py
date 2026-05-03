@@ -32,7 +32,8 @@ def recommendations():
     for movie in recs:
         movie['poster_url'] = gmp(movie['movie_id'])
     mode = "Based on your taste" if interactions else "Popular Movies"
-    return render_template('movie_recommendations.html', movies=recs, mode=mode)
+    return render_template('movie_recommendations.html', movies=recs, mode=mode,
+                           title='Movie Recommendations')
 
 
 @movies.route('/search')
@@ -42,7 +43,8 @@ def search():
         return redirect(url_for('main.home'))
     from recommender.api_clients.movies_client import search_movies
     results = search_movies(q, max_results=20)
-    return render_template('movie_search_result.html', movies=results, query=q)
+    return render_template('movie_search_result.html', movies=results, query=q,
+                           title=('Search: ' + q) if q else 'Movie Search')
 
 
 # /wishlist and /interact must be defined BEFORE /<path:title>
@@ -128,4 +130,5 @@ def detail(title):
 
     return render_template('movie_details.html', movie=movie, similar=similar,
                            in_wishlist=in_wishlist, user_status=status,
-                           user_rating=user_rating, comments=comments, form=form)
+                           user_rating=user_rating, comments=comments, form=form,
+                           title=movie['title'])

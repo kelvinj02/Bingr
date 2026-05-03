@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ movie.title }} — BinGr{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/detail.css') }}">{% endblock styles %}
 
 {% block content %}
 <div class="container" style="padding-top:2rem;padding-bottom:3rem;">
@@ -19,9 +19,9 @@
 
     <div class="detail-meta">
       {% if movie.genres %}
-        <div class="detail-tags">
-          {% for g in movie.genres %}<span class="detail-tag">{{ g }}</span>{% endfor %}
-        </div>
+      <div class="detail-tags">
+        {% for g in movie.genres %}<span class="detail-tag">{{ g }}</span>{% endfor %}
+      </div>
       {% endif %}
 
       <h1 class="detail-title">{{ movie.title }}</h1>
@@ -36,6 +36,7 @@
         {% if movie.rating %}<span class="detail-rating">★ {{ "%.1f"|format(movie.rating) }}
           {% if movie.rating_count %}<small style="font-weight:400;opacity:.7;">({{ "{:,}".format(movie.rating_count) }})</small>{% endif %}
         </span>{% endif %}
+        <span class="detail-cert">{{ movie.certification if movie.certification else 'N/A' }}</span>
       </div>
 
       {% if movie.directors %}
@@ -54,6 +55,7 @@
         <div class="detail-actions">
           <button class="btn {% if in_wishlist %}btn-primary{% else %}btn-outline{% endif %}"
                   id="wishlist-btn"
+                  data-item-type="movie"
                   data-movie-id="{{ movie.id }}"
                   data-title="{{ movie.title }}">
             {% if in_wishlist %}Saved to Wishlist ✓{% else %}Save to Wishlist{% endif %}
@@ -175,67 +177,5 @@
 
 </div>
 
-<script>
-const MOVIE_TITLE = {{ movie.title | tojson }};
-
-// Wishlist toggle
-const wishlistBtn = document.getElementById('wishlist-btn');
-if (wishlistBtn) {
-  wishlistBtn.addEventListener('click', async () => {
-    try {
-      const res = await fetch('/movies/wishlist', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          movie_id: parseInt(wishlistBtn.dataset.movieId),
-          title: MOVIE_TITLE
-        })
-      });
-      const data = await res.json();
-      if (!data.ok) return;
-      if (data.in_wishlist) {
-        wishlistBtn.textContent = 'Saved to Wishlist ✓';
-        wishlistBtn.classList.replace('btn-outline', 'btn-primary');
-      } else {
-        wishlistBtn.textContent = 'Save to Wishlist';
-        wishlistBtn.classList.replace('btn-primary', 'btn-outline');
-      }
-    } catch (e) { console.error('Wishlist error:', e); }
-  });
-}
-
-// Form star rating
-const formStars = document.querySelectorAll('.form-star');
-const scoreInput = document.getElementById('review-score-input');
-let selectedRating = 0;
-
-formStars.forEach(star => {
-  star.addEventListener('click', () => {
-    selectedRating = parseInt(star.dataset.value);
-    scoreInput.value = selectedRating;
-    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
-  });
-  star.addEventListener('mouseover', () => {
-    const val = parseInt(star.dataset.value);
-    formStars.forEach((s, i) => s.classList.toggle('filled', i < val));
-  });
-  star.addEventListener('mouseout', () => {
-    formStars.forEach((s, i) => s.classList.toggle('filled', i < selectedRating));
-  });
-});
-
-// Similar carousel
-function scrollCarousel(id, direction) {
-  const carousel = document.getElementById('carousel-' + id);
-  const atStart = carousel.scrollLeft <= 0;
-  const atEnd   = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 1;
-  if (direction === -1 && atStart) {
-    carousel.scrollTo({ left: carousel.scrollWidth, behavior: 'smooth' });
-  } else if (direction === 1 && atEnd) {
-    carousel.scrollTo({ left: 0, behavior: 'smooth' });
-  } else {
-    carousel.scrollBy({ left: direction * 340, behavior: 'smooth' });
-  }
-}
-</script>
-{% endblock %}
+{% endblock content %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/detail.js') }}"></script>{% endblock scripts %}

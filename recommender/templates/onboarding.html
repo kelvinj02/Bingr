@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">{% endblock styles %}
 {% block content %}
 <section class="onboarding-section">
     <div class="onboarding-card">
@@ -28,11 +29,5 @@
     </div>
 </section>
 
-<script>
-document.querySelectorAll('.genre-pill-label').forEach(label => {
-    label.addEventListener('click', () => {
-        label.classList.toggle('selected');
-    });
-});
-</script>
-{% endblock %}
+{% endblock content %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>{% endblock scripts %}
