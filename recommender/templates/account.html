@@ -106,8 +106,14 @@
       <div class="activity-list">
         {% for c in comments %}
         <a href="{{ url_for('movies.detail', title=c.display_title) if c.item_type == 'movie' else url_for('books.detail', title=c.display_title) }}" class="activity-card activity-card--review">
-          <div class="activity-cover {{ c.item_type }}-placeholder cover-initials">
-            {{ c.display_title[0] if c.display_title else '?' }}
+          <div class="activity-cover {{ c.item_type }}-placeholder{% if not c.cover_url %} cover-initials{% endif %}"
+               data-init="{{ c.display_title[0] if c.display_title else '?' }}">
+            {% if c.cover_url %}
+              <img src="{{ c.cover_url }}" alt="{{ c.display_title }}" class="activity-cover-img"
+                   onerror="var p=this.parentElement;this.style.display='none';p.classList.add('cover-initials');p.textContent=p.dataset.init">
+            {% else %}
+              {{ c.display_title[0] if c.display_title else '?' }}
+            {% endif %}
           </div>
           <div class="activity-info">
             <span class="activity-type">{{ c.item_type | capitalize }}</span>

@@ -284,6 +284,15 @@
     overflow: hidden;
 }
 
+/* cover image inside activity card */
+.activity-cover-img {
+    width: 44px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+}
+
 /* score */
 .activity-score {
     flex-shrink: 0;

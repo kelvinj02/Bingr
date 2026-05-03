@@ -67,22 +67,33 @@ def account():
             score=r.rating * 2, author=None, director=None,
         ))
 
+    from recommender.api_clients.movies_client import get_movie_poster, get_movie_full
+    from recommender.api_clients.books_client import get_book_cover
+
     raw_comments = Comment.query.filter_by(user_id=current_user.id).all()
     comments = []
     for c in raw_comments:
         if c.item_type == 'movie':
             try:
+                mid = int(c.item_id)
                 df = current_app.movie_recommender.df
-                matches = df[df['movie_id'] == int(c.item_id)]
-                display_title = matches.iloc[0]['title'] if not matches.empty else c.item_id
+                matches = df[df['movie_id'] == mid]
+                if not matches.empty:
+                    display_title = matches.iloc[0]['title']
+                else:
+                    movie_data = get_movie_full(mid)
+                    display_title = movie_data['title'] if movie_data else c.item_id
             except Exception:
                 display_title = c.item_id
+                mid = None
+            cover_url = get_movie_poster(mid) if mid else None
         else:
             display_title = c.item_id
+            cover_url = get_book_cover(c.item_id)
         comments.append(SimpleNamespace(
             id=c.id, item_type=c.item_type, item_id=c.item_id,
-            display_title=display_title, content=c.content,
-            review_score=c.review_score, created_at=c.created_at,
+            display_title=display_title, cover_url=cover_url,
+            content=c.content, review_score=c.review_score, created_at=c.created_at,
         ))
 
     return render_template('account.html', title='Account', form=form,
