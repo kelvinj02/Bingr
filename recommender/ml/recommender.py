@@ -68,7 +68,8 @@ class BookRecommender:
         tfidf = TfidfVectorizer(stop_words="english", max_features=10000)
         self.tfidf_matrix = tfidf.fit_transform(df["combined_features"])
         self.quality_scores = df["quality_score"].values
-        self.title_to_idx = pd.Series(df.index, index=df["Book"]).drop_duplicates()
+        _s = pd.Series(df.index, index=df["Book"])
+        self.title_to_idx = _s[~_s.index.duplicated(keep='first')]
         self.df = df
 
         all_genres = set()

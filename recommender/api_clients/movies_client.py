@@ -1,5 +1,6 @@
 import os
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from recommender import cache
 
@@ -119,67 +120,58 @@ def _format_movie(item: dict, genres: list[str], mood: Optional[str]) -> dict:
     }
 
 
+@cache.memoize(timeout=900)
 def get_movie_recommendations(
     favorites: list[str] = None,
     genres: list[str] = None,
     mood: Optional[str] = None,
     max_results: int = 20,
 ) -> list[dict]:
-    """
-    Fetch movie recommendations from the TMDB API.
+    favorites = list(favorites or [])
+    genres    = list(genres    or [])
+    results, seen_ids = [], set()
 
-    Args:
-        favorites:   List of movie/book titles the user likes.
-        genres:      List of genre strings (e.g. ["Thriller", "Sci-Fi"]).
-        mood:        Optional mood string (e.g. "dark & intense").
-        max_results: Number of results to return.
+    # Search all favorite titles and fetch their similar movies in parallel
+    if favorites:
+        with ThreadPoolExecutor(max_workers=min(len(favorites[:2]), 2)) as ex:
+            id_futures = {ex.submit(_search_movie_id, t): t for t in favorites[:2]}
+            found_ids  = [(id_futures[f], f.result()) for f in as_completed(id_futures)]
 
-    Returns:
-        List of dicts with keys: title, year, genres, description,
-        rating, rating_count, thumbnail, info_link, language, popularity.
-    """
-    favorites = favorites or []
-    genres = genres or []
-    results = []
-    seen_ids = set()
+        valid = [(title, mid) for title, mid in found_ids if mid]
+        if valid:
+            with ThreadPoolExecutor(max_workers=len(valid)) as ex:
+                sim_futures = {ex.submit(_get_similar_movies, mid, max_results): title
+                               for title, mid in valid}
+                for f in as_completed(sim_futures):
+                    for item in f.result():
+                        if item["id"] not in seen_ids and len(results) < max_results:
+                            seen_ids.add(item["id"])
+                            results.append(_format_movie(item, genres, mood))
 
-    # find movies similar to the user's favorites
-    for title in favorites[:2]:
-        if len(results) >= max_results:
-            break
-        movie_id = _search_movie_id(title)
-        if not movie_id:
-            continue
-        similar = _get_similar_movies(movie_id, max_results)
-        for item in similar:
-            if item["id"] not in seen_ids and len(results) < max_results:
-                seen_ids.add(item["id"])
-                results.append(_format_movie(item, genres, mood))
-
-    # fill remaining slots via genre discovery
+    # Fill remaining slots via genre discovery
     if len(results) < max_results and genres:
         genre_ids = _get_genre_ids(genres)
         if genre_ids:
-            discovered = _discover_movies(genre_ids, max_results)
-            for item in discovered:
+            for item in _discover_movies(genre_ids, max_results):
                 if item["id"] not in seen_ids and len(results) < max_results:
                     seen_ids.add(item["id"])
                     results.append(_format_movie(item, genres, mood))
 
-    # fall back to popular movies
+    # Fall back to popular movies
     if not results:
         try:
-            url = f"{TMDB_BASE_URL}/movie/popular"
+            url    = f"{TMDB_BASE_URL}/movie/popular"
             params = {"api_key": TMDB_API_KEY, "page": 1, "language": "en-US"}
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            for item in response.json().get("results", [])[:max_results]:
+            resp   = requests.get(url, params=params, timeout=10)
+            resp.raise_for_status()
+            for item in resp.json().get("results", [])[:max_results]:
                 results.append(_format_movie(item, genres, mood))
         except Exception:
             return []
 
     return results
 
+@cache.memoize(timeout=900)
 def get_movie(movie_id: str) -> Optional[dict]:
     url=f"{TMDB_BASE_URL}/movie/{movie_id}"
     params={"api_key": TMDB_API_KEY, "language": "en-US"}
@@ -211,6 +203,7 @@ def search_movie_by_title(title: str) -> Optional[int]:
     return _search_movie_id(title)
 
 
+@cache.memoize(timeout=900)
 def _get_certification(movie_id: int) -> Optional[str]:
     """Fetch the US certification (PG, R, etc.) from TMDB release_dates."""
     try:
@@ -233,12 +226,20 @@ def _get_certification(movie_id: int) -> Optional[str]:
 
 @cache.memoize(timeout=900)
 def get_movie_full(movie_id: int) -> Optional[dict]:
-    """Fetch full movie detail + cast/crew + certification from TMDB."""
+    """Fetch full movie detail + cast/crew + certification from TMDB in parallel."""
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
     try:
-        d = requests.get(f"{TMDB_BASE_URL}/movie/{movie_id}", params=params, timeout=10)
+        # Fire all three TMDB requests simultaneously
+        with ThreadPoolExecutor(max_workers=3) as ex:
+            f_detail = ex.submit(requests.get, f"{TMDB_BASE_URL}/movie/{movie_id}",
+                                 params=params, timeout=10)
+            f_credits = ex.submit(requests.get, f"{TMDB_BASE_URL}/movie/{movie_id}/credits",
+                                  params=params, timeout=10)
+            f_cert = ex.submit(_get_certification, movie_id)
+
+        d = f_detail.result()
+        c = f_credits.result()
         d.raise_for_status()
-        c = requests.get(f"{TMDB_BASE_URL}/movie/{movie_id}/credits", params=params, timeout=10)
         c.raise_for_status()
         item    = d.json()
         credits = c.json()
@@ -266,7 +267,7 @@ def get_movie_full(movie_id: int) -> Optional[dict]:
             "producers":     producers,
             "cast":          cast,
             "info_link":     f"https://www.themoviedb.org/movie/{item.get('id')}",
-            "certification": _get_certification(movie_id),
+            "certification": f_cert.result(),
         }
     except Exception:
         return None

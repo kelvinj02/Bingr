@@ -2,6 +2,7 @@ import os
 import re
 import urllib.parse
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from recommender import cache
 
@@ -138,47 +139,55 @@ def get_book_recommendations(
         return []
 
     items = data.get("items", [])
-
     if not items:
         return []
 
-    results, seen_titles = [], set()
+    # Pass 1 — deduplicate and extract Google Books thumbnails
+    candidates, seen_titles = [], set()
     for item in items:
-        info = item.get("volumeInfo", {})
-        image_links = info.get("imageLinks", {})
-
+        info       = item.get("volumeInfo", {})
         book_title = info.get("title", "Unknown Title")
         if book_title in seen_titles:
-            continue        # skip duplicate editions of the same title
-        thumbnail = _upgrade_cover_url(
-            image_links.get("thumbnail") or image_links.get("smallThumbnail")
-        ) or _get_openlibrary_cover(book_title)
-        if not thumbnail:
-            continue        # skip books with no reliable cover
-
+            continue
         seen_titles.add(book_title)
-        raw_description = info.get("description", "")
-        clean_description = (
-            raw_description[:300] + "..." if len(raw_description) > 300 else raw_description
-        ) or "No description available."
+        links     = info.get("imageLinks", {})
+        thumbnail = _upgrade_cover_url(links.get("thumbnail") or links.get("smallThumbnail"))
+        candidates.append({"id": item.get("id"), "title": book_title,
+                           "thumbnail": thumbnail, "info": info})
+
+    # Pass 2 — fetch Open Library covers in parallel for books that still need one
+    need_ol = [c for c in candidates if not c["thumbnail"]]
+    if need_ol:
+        with ThreadPoolExecutor(max_workers=min(8, len(need_ol))) as ex:
+            futures = {ex.submit(_get_openlibrary_cover, c["title"]): c for c in need_ol}
+            for f in as_completed(futures):
+                futures[f]["thumbnail"] = f.result()
+
+    # Pass 3 — build final list, skip anything still without a cover
+    results = []
+    for c in candidates:
+        if not c["thumbnail"]:
+            continue
+        info = c["info"]
+        raw  = info.get("description", "")
         results.append({
-            "id":          item.get("id"),
-            "title":       book_title,
+            "id":          c["id"],
+            "title":       c["title"],
             "authors":     info.get("authors", ["Unknown Author"]),
             "year":        (info.get("publishedDate", "") or "")[:4] or None,
             "genres":      info.get("categories", genres)[:2],
-            "description": clean_description,
+            "description": (raw[:300] + "..." if len(raw) > 300 else raw) or "No description available.",
             "rating":      info.get("averageRating"),
             "rating_count":info.get("ratingsCount"),
-            "thumbnail":   thumbnail,
+            "thumbnail":   c["thumbnail"],
             "info_link":   info.get("infoLink"),
             "page_count":  info.get("pageCount"),
             "language":    info.get("language"),
         })
-
     return results
 
 
+@cache.memoize(timeout=900)
 def get_book(book_id: str) -> Optional[dict]:
     url = f"{GOOGLE_BOOKS_BASE_URL}/{book_id}"
     params = {"key": GOOGLE_BOOKS_API_KEY}
@@ -310,29 +319,18 @@ _TRENDING_GENRE_QUERIES = [
 
 @cache.memoize(timeout=900)
 def get_trending_books(max_results: int = 20) -> list[dict]:
-    """
-    Fetch trending new-release books from Google Books across all genres.
-    Uses orderBy=newest, prefers books from the last 30 days but falls back
-    to any recent book if the strict window yields too few results.
-    Deduplicates by title and shuffles for variety.
-    """
     import random as _random
-    from datetime import datetime, timedelta
+    from datetime import datetime
 
-    now = datetime.now()
-    cutoff_30  = (now - timedelta(days=30)).strftime('%Y-%m')
-    cutoff_yr  = str(now.year)
+    cutoff_yr = str(datetime.now().year)
+    per_query = max(8, (max_results * 4) // len(_TRENDING_GENRE_QUERIES))
 
     def _pub_sort_key(pub: str) -> str:
-        """Return a comparable string; missing dates sort last."""
         if not pub:
             return "0000"
         return pub[:7] if len(pub) >= 7 else pub
 
-    pool, seen = [], set()
-    per_query  = max(8, (max_results * 4) // len(_TRENDING_GENRE_QUERIES))
-
-    for query in _TRENDING_GENRE_QUERIES:
+    def _fetch(query: str) -> list:
         params = {
             "q":           query,
             "orderBy":     "newest",
@@ -344,7 +342,16 @@ def get_trending_books(max_results: int = 20) -> list[dict]:
         try:
             resp = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
             resp.raise_for_status()
-            for item in resp.json().get("items", []):
+            return resp.json().get("items", [])
+        except Exception:
+            return []
+
+    # Fire all genre queries in parallel instead of one at a time
+    pool, seen = [], set()
+    with ThreadPoolExecutor(max_workers=len(_TRENDING_GENRE_QUERIES)) as ex:
+        futures = [ex.submit(_fetch, q) for q in _TRENDING_GENRE_QUERIES]
+        for future in as_completed(futures):
+            for item in future.result():
                 info  = item.get("volumeInfo", {})
                 title = info.get("title", "").strip()
                 if not title or title in seen:
@@ -354,7 +361,7 @@ def get_trending_books(max_results: int = 20) -> list[dict]:
                     links.get("thumbnail") or links.get("smallThumbnail")
                 )
                 if not thumbnail:
-                    continue        # skip books without a cover — they look ugly
+                    continue
                 seen.add(title)
                 pub = (info.get("publishedDate", "") or "").strip()
                 pool.append({
@@ -370,12 +377,8 @@ def get_trending_books(max_results: int = 20) -> list[dict]:
                     "info_link":   info.get("infoLink"),
                     "_pub_key":    _pub_sort_key(pub),
                 })
-        except Exception:
-            continue
 
-    # Sort so last-30-days books come first, older books fill remaining slots
     pool.sort(key=lambda b: b.pop("_pub_key"), reverse=True)
-    # Shuffle within each tier so results vary on each cache miss
     recent = [b for b in pool if (b.get("year") or "0") >= cutoff_yr]
     older  = [b for b in pool if b not in recent]
     _random.shuffle(recent)

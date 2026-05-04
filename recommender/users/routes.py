@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from flask import render_template, url_for, flash, redirect, request, Blueprint, abort, current_app
 from flask_login import login_user, current_user, logout_user, login_required
 from types import SimpleNamespace
@@ -71,30 +72,45 @@ def account():
     from recommender.api_clients.books_client import get_book_cover
 
     raw_comments = Comment.query.filter_by(user_id=current_user.id).all()
-    comments = []
-    for c in raw_comments:
+    _df = current_app.movie_recommender.df
+
+    def _enrich(c):
         if c.item_type == 'movie':
             try:
                 mid = int(c.item_id)
-                df = current_app.movie_recommender.df
-                matches = df[df['movie_id'] == mid]
+                matches = _df[_df['movie_id'] == mid]
                 if not matches.empty:
                     display_title = matches.iloc[0]['title']
+                    cover_url = get_movie_poster(mid)
                 else:
                     movie_data = get_movie_full(mid)
-                    display_title = movie_data['title'] if movie_data else c.item_id
+                    if movie_data:
+                        display_title = movie_data['title']
+                        cover_url = movie_data.get('poster_url')
+                    else:
+                        display_title = c.item_id
+                        cover_url = None
             except Exception:
                 display_title = c.item_id
-                mid = None
-            cover_url = get_movie_poster(mid) if mid else None
+                cover_url = None
         else:
             display_title = c.item_id
             cover_url = get_book_cover(c.item_id)
-        comments.append(SimpleNamespace(
+        return SimpleNamespace(
             id=c.id, item_type=c.item_type, item_id=c.item_id,
             display_title=display_title, cover_url=cover_url,
             content=c.content, review_score=c.review_score, created_at=c.created_at,
-        ))
+        )
+
+    comments = []
+    if raw_comments:
+        with ThreadPoolExecutor(max_workers=min(8, len(raw_comments))) as ex:
+            futures = [ex.submit(_enrich, c) for c in raw_comments]
+        for f in futures:
+            try:
+                comments.append(f.result())
+            except Exception:
+                pass
 
     return render_template('account.html', title='Account', form=form,
                            ratings=ratings, comments=comments)
@@ -165,15 +181,19 @@ def onboarding():
 def wishlist():
     from recommender.api_clients.movies_client import get_movie_poster
     items = WishListItem.query.filter_by(user_id=current_user.id).all()
-    posters = {}
+    posters = {item.id: None for item in items}
+    movie_items = []
     for item in items:
         if item.item_type == 'movie':
             try:
-                posters[item.id] = get_movie_poster(int(item.item_id))
+                movie_items.append((item, int(item.item_id)))
             except (ValueError, TypeError):
-                posters[item.id] = None
-        else:
-            posters[item.id] = None
+                pass
+    if movie_items:
+        with ThreadPoolExecutor(max_workers=min(8, len(movie_items))) as ex:
+            poster_futures = [(item, ex.submit(get_movie_poster, mid)) for item, mid in movie_items]
+        for item, f in poster_futures:
+            posters[item.id] = f.result()
     return render_template("wishlist.html", title="My Wishlist", items=items, posters=posters)
 
 #Add items to Wishlist

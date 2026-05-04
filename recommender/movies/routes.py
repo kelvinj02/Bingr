@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from recommender import db
@@ -29,8 +30,11 @@ def recommendations():
     interactions = [{"title": r.movie_title, "status": r.status}
                     for r in UserMovie.query.filter_by(user_id=current_user.id).all()]
     recs = current_app.movie_recommender.get_personalized(interactions, top_n=20)
-    for movie in recs:
-        movie['poster_url'] = gmp(movie['movie_id'])
+    if recs:
+        with ThreadPoolExecutor(max_workers=min(10, len(recs))) as ex:
+            poster_futures = [(movie, ex.submit(gmp, movie['movie_id'])) for movie in recs]
+        for movie, f in poster_futures:
+            movie['poster_url'] = f.result()
     mode = "Based on your taste" if interactions else "Popular Movies"
     return render_template('movie_recommendations.html', movies=recs, mode=mode,
                            title='Movie Recommendations')
@@ -107,8 +111,11 @@ def detail(title):
             similar.append({"title": fmt["title"], "poster_url": fmt["thumbnail"],
                             "overview": fmt["description"]})
     else:
-        similar = [{"title": s["title"], "poster_url": get_movie_poster(s["movie_id"]),
-                    "overview": s.get("overview", "")} for s in similar_raw]
+        with ThreadPoolExecutor(max_workers=min(10, len(similar_raw))) as ex:
+            poster_futures = [(s, ex.submit(get_movie_poster, s["movie_id"])) for s in similar_raw]
+        similar = [{"title": s["title"], "poster_url": f.result(),
+                    "overview": s.get("overview", "")}
+                   for s, f in poster_futures]
 
     in_wishlist   = _in_wishlist(movie_id)
     status, user_rating = _user_movie_status(title)

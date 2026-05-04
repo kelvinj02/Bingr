@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from recommender import db
@@ -38,9 +39,15 @@ def recommendations():
     interactions = _get_interactions()
     genres = _get_genres()
     recs = current_app.recommender.get_personalized(interactions, genres, top_n=100)
-    for b in recs:
-        if not b.get('thumbnail'):
-            b['thumbnail'] = get_book_cover(b['title'])
+
+    # Fetch all missing covers simultaneously
+    need_cover = [b for b in recs if not b.get('thumbnail')]
+    if need_cover:
+        with ThreadPoolExecutor(max_workers=min(10, len(need_cover))) as ex:
+            futures = {ex.submit(get_book_cover, b['title']): b for b in need_cover}
+            for f in as_completed(futures):
+                futures[f]['thumbnail'] = f.result()
+
     recs = [b for b in recs if b.get('thumbnail')][:50]
     mode = "Based on your taste" if len(interactions) >= 3 else "Top picks for you"
 
@@ -96,6 +103,11 @@ def detail(title):
     df = current_app.recommender.df
     matches = df[df['Book'] == title]
 
+    _ex = ThreadPoolExecutor(max_workers=2)
+    f_chars = _ex.submit(get_book_characters, title)
+    f_cover = _ex.submit(get_book_cover, title) if not matches.empty else None
+    _ex.shutdown(wait=False)
+
     if matches.empty:
         book_data = get_book_by_title(title)
         if book_data:
@@ -110,9 +122,9 @@ def detail(title):
     else:
         book      = matches.iloc[0].to_dict()
         similar   = current_app.recommender.get_similar(title, top_n=10)
-        cover_url = get_book_cover(title)
+        cover_url = f_cover.result()
 
-    characters    = get_book_characters(title)
+    characters = f_chars.result()
     comments      = Comment.query.filter_by(
         item_type='book', item_id=title).order_by(Comment.created_at.desc()).all()
     in_wishlist   = _book_in_wishlist(title)

@@ -1,4 +1,5 @@
 import os
+import threading
 import urllib.parse
 from flask import Flask
 from flask_bcrypt import Bcrypt
@@ -55,5 +56,33 @@ def create_app(config_class=Config):
     data_path = os.path.join(os.path.dirname(__file__), 'api_clients', 'movies_data.pkl')
     sim_path  = os.path.join(os.path.dirname(__file__), 'api_clients', 'similarity.pkl')
     app.movie_recommender = MovieRecommender(data_path, sim_path)
+
+    def _warm_cache():
+        with app.app_context():
+            try:
+                from recommender.api_clients.movies_client import get_trending_movies
+                from recommender.api_clients.books_client import get_trending_books, get_book_recommendations
+                from concurrent.futures import ThreadPoolExecutor
+                # One entry per (function, args) combo that each route actually calls.
+                # cache.memoize keys on args, so max_results=5 and max_results=20
+                # are separate entries — both must be warmed.
+                calls = [
+                    lambda: get_trending_movies(10),          # home page
+                    lambda: get_trending_movies(20),          # trending page
+                    lambda: get_trending_books(5),            # home page
+                    lambda: get_trending_books(20),           # trending page
+                    lambda: get_book_recommendations(max_results=5),   # home (logged-out)
+                    lambda: get_book_recommendations(max_results=20),  # browse / logged-out recs
+                ]
+                with ThreadPoolExecutor(max_workers=len(calls)) as ex:
+                    for f in [ex.submit(fn) for fn in calls]:
+                        try:
+                            f.result()
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+    threading.Thread(target=_warm_cache, daemon=True).start()
 
     return app
