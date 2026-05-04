@@ -101,7 +101,11 @@ def detail(title):
         get_book_cover, get_book_by_title, get_book_characters
     )
     df = current_app.recommender.df
-    matches = df[df['Book'] == title]
+    title_to_idx = current_app.recommender.title_to_idx
+    if title in title_to_idx.index:
+        matches = df.iloc[[title_to_idx[title]]]
+    else:
+        matches = df.iloc[0:0]
 
     with ThreadPoolExecutor(max_workers=2) as ex:
         f_chars = ex.submit(get_book_characters, title)

@@ -1,15 +1,18 @@
+import logging
 import threading
 from flask import url_for, current_app
 from flask_mail import Message
 from recommender import mail
+
+logger = logging.getLogger(__name__)
 
 
 def _send_async(app, msg):
     with app.app_context():
         try:
             mail.send(msg)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error("Failed to send email to %s: %s", msg.recipients, e)
 
 
 def send_reset_email(user):

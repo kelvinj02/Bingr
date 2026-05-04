@@ -24,7 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (!data.ok) return;
+        if (!data.ok) {
+          const orig = wishlistBtn.textContent;
+          wishlistBtn.textContent = 'Error — try again';
+          setTimeout(() => { wishlistBtn.textContent = orig; }, 2000);
+          return;
+        }
 
         if (data.in_wishlist) {
           wishlistBtn.textContent = 'Saved to Wishlist ✓';
