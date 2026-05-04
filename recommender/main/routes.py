@@ -24,22 +24,46 @@ def _norm_book(b):
     return b
 
 
+def _cached_personalized_movie_items(user_id, top_n):
+    """Cache the fully assembled personalized movie list per user for 5 minutes."""
+    from recommender import cache as _cache
+    _key = f"pers_movies_{user_id}_{top_n}"
+    hit = _cache.get(_key)
+    if hit is not None:
+        return hit
+    result = _personalized_movie_items(top_n=top_n)
+    _cache.set(_key, result, timeout=300)
+    return result
+
+
+def _cached_personalized_book_items(user_id, top_n):
+    """Cache the fully assembled personalized book list per user for 5 minutes."""
+    from recommender import cache as _cache
+    _key = f"pers_books_{user_id}_{top_n}"
+    hit = _cache.get(_key)
+    if hit is not None:
+        return hit
+    result = _personalized_book_items(top_n=top_n)
+    _cache.set(_key, result, timeout=300)
+    return result
+
+
 @main.route("/")
 @main.route("/home")
 def home():
     ccrc = copy_current_request_context
+    uid  = current_user.id if current_user.is_authenticated else None
     with ThreadPoolExecutor(max_workers=4) as ex:
         f_trending_movies = ex.submit(get_trending_movies, 10)
         f_trending_books  = ex.submit(get_trending_books, 10)
-        if current_user.is_authenticated:
-            f_rec_movies = ex.submit(ccrc(lambda: _personalized_movie_items(top_n=5)))
-            f_rec_books  = ex.submit(ccrc(lambda: _personalized_book_items(top_n=5)))
+        if uid:
+            f_rec_movies = ex.submit(ccrc(lambda: _cached_personalized_movie_items(uid, 5)))
+            f_rec_books  = ex.submit(ccrc(lambda: _cached_personalized_book_items(uid, 5)))
 
     trend_movies_raw = f_trending_movies.result()
     trend_books_raw  = [_norm_book(b) for b in f_trending_books.result()]
 
-    if not current_user.is_authenticated:
-        # reuse already-fetched trending data — no extra API calls
+    if not uid:
         rec_movies_raw = trend_movies_raw[:5]
         rec_books_raw  = trend_books_raw[:5] or _csv_fallback_books(5)
     else:
@@ -235,9 +259,10 @@ def _personalized_book_items(top_n=20):
 @main.route("/recommendations")
 def recommendations():
     ccrc = copy_current_request_context
+    uid  = current_user.id if current_user.is_authenticated else None
     with ThreadPoolExecutor(max_workers=2) as ex:
-        f_movies = ex.submit(ccrc(lambda: _personalized_movie_items(top_n=20)))
-        f_books  = ex.submit(ccrc(lambda: _personalized_book_items(top_n=20)))
+        f_movies = ex.submit(ccrc(lambda: _cached_personalized_movie_items(uid, 20)))
+        f_books  = ex.submit(ccrc(lambda: _cached_personalized_book_items(uid, 20)))
     movies_raw = f_movies.result()
     books_raw  = f_books.result()
 
@@ -251,15 +276,16 @@ def recommendations():
 
 @main.route("/trending")
 def trending():
-    ccrc = copy_current_request_context
-    with ThreadPoolExecutor(max_workers=3) as ex:
-        f_movies   = ex.submit(get_trending_movies, 20)
-        f_books    = ex.submit(get_trending_books, 20)
-        f_fallback = ex.submit(ccrc(lambda: _personalized_book_items(top_n=20)))
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_movies = ex.submit(get_trending_movies, 20)
+        f_books  = ex.submit(get_trending_books, 20)
     movies_raw = [_norm_movie(m) for m in f_movies.result()]
-    books_raw  = [_norm_book(b) for b in f_books.result()] or f_fallback.result() or _csv_fallback_books(20)
+    books_raw  = [_norm_book(b) for b in f_books.result()]
+    if not books_raw:
+        uid = current_user.id if current_user.is_authenticated else None
+        books_raw = _cached_personalized_book_items(uid, 20) or _csv_fallback_books(20)
 
-    items = ([ {"kind": "movie", **m} for m in movies_raw] +
+    items = ([{"kind": "movie", **m} for m in movies_raw] +
              [{"kind": "book",  **b} for b in books_raw])
     random.shuffle(items)
 
@@ -270,14 +296,14 @@ def trending():
 @main.route("/browse")
 def top_recommendations():
     filter_type = request.args.get('type', 'all')
-    ccrc = copy_current_request_context
-
-    with ThreadPoolExecutor(max_workers=3) as ex:
-        f_movies   = ex.submit(get_trending_movies, 20)
-        f_books    = ex.submit(get_book_recommendations, max_results=20)
-        f_fallback = ex.submit(ccrc(lambda: _personalized_book_items(top_n=20)))
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_movies = ex.submit(get_trending_movies, 20)
+        f_books  = ex.submit(get_book_recommendations, max_results=20)
     movies_raw = f_movies.result()
-    books_raw  = f_books.result() or f_fallback.result() or _csv_fallback_books(20)
+    books_raw  = f_books.result()
+    if not books_raw:
+        uid = current_user.id if current_user.is_authenticated else None
+        books_raw = _cached_personalized_book_items(uid, 20) or _csv_fallback_books(20)
 
     items = ([{"kind": "movie", **_norm_movie(m)} for m in movies_raw] +
              [{"kind": "book",  **_norm_book(b)}  for b in books_raw])

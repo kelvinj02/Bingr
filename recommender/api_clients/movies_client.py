@@ -59,7 +59,7 @@ def _search_movie_id(title: str) -> Optional[int]:
         "page":    1,
     }
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
         results = response.json().get("results", [])
         return results[0]["id"] if results else None
@@ -73,7 +73,7 @@ def _get_similar_movies(movie_id: int, max_results: int) -> list[dict]:
     url = f"{TMDB_BASE_URL}/movie/{movie_id}/similar"
     params = {"api_key": TMDB_API_KEY, "page": 1}
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
         return response.json().get("results", [])[:max_results]
     except Exception:
@@ -93,7 +93,7 @@ def _discover_movies(genre_ids: list[int], max_results: int) -> list[dict]:
         "language":             "en-US",
     }
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
         return response.json().get("results", [])[:max_results]
     except Exception:
@@ -162,7 +162,7 @@ def get_movie_recommendations(
         try:
             url    = f"{TMDB_BASE_URL}/movie/popular"
             params = {"api_key": TMDB_API_KEY, "page": 1, "language": "en-US"}
-            resp   = requests.get(url, params=params, timeout=10)
+            resp   = requests.get(url, params=params, timeout=5)
             resp.raise_for_status()
             for item in resp.json().get("results", [])[:max_results]:
                 results.append(_format_movie(item, genres, mood))
@@ -176,7 +176,7 @@ def get_movie(movie_id: str) -> Optional[dict]:
     url=f"{TMDB_BASE_URL}/movie/{movie_id}"
     params={"api_key": TMDB_API_KEY, "language": "en-US"}
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
         item=response.json()
         return _format_movie(item, [], None)
@@ -191,7 +191,7 @@ def get_trending_movies(max_results: int = 5) -> list[dict]:
     url = f"{TMDB_BASE_URL}/trending/movie/week"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
         results = response.json().get("results", [])[:max_results]
         movies = [_format_movie(item, [], None) for item in results]
@@ -215,7 +215,7 @@ def _get_certification(movie_id: int) -> Optional[str]:
         r = requests.get(
             f"{TMDB_BASE_URL}/movie/{movie_id}/release_dates",
             params={"api_key": TMDB_API_KEY},
-            timeout=10,
+            timeout=5,
         )
         r.raise_for_status()
         for country in r.json().get("results", []):
@@ -237,9 +237,9 @@ def get_movie_full(movie_id: int) -> Optional[dict]:
         # Fire all three TMDB requests simultaneously
         with ThreadPoolExecutor(max_workers=3) as ex:
             f_detail = ex.submit(requests.get, f"{TMDB_BASE_URL}/movie/{movie_id}",
-                                 params=params, timeout=10)
+                                 params=params, timeout=5)
             f_credits = ex.submit(requests.get, f"{TMDB_BASE_URL}/movie/{movie_id}/credits",
-                                  params=params, timeout=10)
+                                  params=params, timeout=5)
             f_cert = ex.submit(_get_certification, movie_id)
 
         d = f_detail.result()
@@ -284,7 +284,7 @@ def search_movies(query: str, max_results: int = 15) -> list[dict]:
     url = f"{TMDB_BASE_URL}/search/movie"
     params = {"api_key": TMDB_API_KEY, "query": query, "page": 1, "language": "en-US"}
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
         results = response.json().get("results", [])[:max_results]
         movies = [_format_movie(item, [], None) for item in results]
@@ -300,7 +300,7 @@ def get_movie_poster(movie_id: int) -> Optional[str]:
     url = f"{TMDB_BASE_URL}/movie/{movie_id}"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, params=params, timeout=5)
         response.raise_for_status()
         poster = response.json().get("poster_path")
         return f"{TMDB_IMAGE_BASE}{poster}" if poster else None

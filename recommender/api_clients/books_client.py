@@ -55,7 +55,7 @@ def _get_openlibrary_cover(title: str) -> Optional[str]:
         resp = requests.get(
             "https://openlibrary.org/search.json",
             params={"title": title, "fields": "cover_i,isbn", "limit": 5},
-            timeout=8,
+            timeout=4,
         )
         docs = resp.json().get("docs", [])
         # Prefer cover_id (most reliable) — check all results
@@ -123,7 +123,7 @@ def get_book_recommendations(
     
     #(fixed) error handling (try, except)
     try:
-        response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
+        response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=6)
         response.raise_for_status()
         data = response.json()
     except Exception:
@@ -221,7 +221,7 @@ def get_book_characters(title: str) -> list[str]:
         resp = requests.get(
             "https://openlibrary.org/search.json",
             params={"title": title, "fields": "title,subject_people", "limit": 1},
-            timeout=10,
+            timeout=5,
         )
         resp.raise_for_status()
         docs = resp.json().get("docs", [])
@@ -245,7 +245,7 @@ def get_book_by_title(title: str) -> Optional[dict]:
             "key":        GOOGLE_BOOKS_API_KEY,
         }
         try:
-            response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
+            response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=6)
             items = response.json().get("items", [])
             if not items:
                 continue
@@ -284,7 +284,7 @@ def get_book_cover(title: str) -> str:
         seen.add(query)
         params = {"q": query, "maxResults": 3, "key": GOOGLE_BOOKS_API_KEY}
         try:
-            response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
+            response = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=4)
             for item in response.json().get("items", []):
                 links = item.get("volumeInfo", {}).get("imageLinks", {})
                 url = links.get("thumbnail") or links.get("smallThumbnail")
@@ -337,7 +337,7 @@ def get_trending_books(max_results: int = 20) -> list[dict]:
             "key":         GOOGLE_BOOKS_API_KEY,
         }
         try:
-            resp = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=10)
+            resp = requests.get(GOOGLE_BOOKS_BASE_URL, params=params, timeout=6)
             resp.raise_for_status()
             return resp.json().get("items", [])
         except Exception:

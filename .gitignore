@@ -11,6 +11,9 @@ instance/
 skills-lock.json
 docs/superpowers/
 
+# Flask cache directory
+.flask_cache/
+
 # Large data files
 *.csv
 *.pkl

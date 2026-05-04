@@ -15,5 +15,7 @@ class Config:
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').strip().lower() == 'true'
     MAIL_USERNAME = os.environ.get('MAIL_USER')
     MAIL_PASSWORD = os.environ.get('MAIL_PASS')
-    CACHE_TYPE = "SimpleCache"
+    _here = os.path.dirname(os.path.abspath(__file__))
+    CACHE_TYPE = "FileSystemCache"
+    CACHE_DIR = os.path.join(_here, '..', '.flask_cache')
     CACHE_DEFAULT_TIMEOUT = 300
