@@ -183,8 +183,11 @@ def get_movie(movie_id: str) -> Optional[dict]:
     except Exception:
         return None
 
-@cache.memoize(timeout=900)
 def get_trending_movies(max_results: int = 5) -> list[dict]:
+    _key = f"trending_movies_{max_results}"
+    cached = cache.get(_key)
+    if cached is not None:
+        return cached
     url = f"{TMDB_BASE_URL}/trending/movie/week"
     params = {"api_key": TMDB_API_KEY, "language": "en-US"}
     try:
@@ -194,6 +197,8 @@ def get_trending_movies(max_results: int = 5) -> list[dict]:
         movies = [_format_movie(item, [], None) for item in results]
         for m in movies:
             m['poster_url'] = m.pop('thumbnail', None)
+        if movies:
+            cache.set(_key, movies, timeout=900)
         return movies
     except Exception:
         return []

@@ -63,13 +63,12 @@ def create_app(config_class=Config):
                 from recommender.api_clients.movies_client import get_trending_movies
                 from recommender.api_clients.books_client import get_trending_books, get_book_recommendations
                 from concurrent.futures import ThreadPoolExecutor
-                # One entry per (function, args) combo that each route actually calls.
-                # cache.memoize keys on args, so max_results=5 and max_results=20
-                # are separate entries — both must be warmed.
+                # Pre-populate cache for every (function, args) combo each route calls.
+                # Each distinct max_results value is a separate cache entry.
                 calls = [
                     lambda: get_trending_movies(10),          # home page
                     lambda: get_trending_movies(20),          # trending page
-                    lambda: get_trending_books(5),            # home page
+                    lambda: get_trending_books(10),           # home page
                     lambda: get_trending_books(20),           # trending page
                     lambda: get_book_recommendations(max_results=5),   # home (logged-out)
                     lambda: get_book_recommendations(max_results=20),  # browse / logged-out recs

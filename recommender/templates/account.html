@@ -153,7 +153,7 @@
             </div>
             <div class="settings-row">
               <span class="settings-label">Member since</span>
-              <span class="settings-value">2026</span>
+              <span class="settings-value">{{ current_user.created_at.year if current_user.created_at else 'N/A' }}</span>
             </div>
             <button type="submit" class="settings-save-btn">Save Changes</button>
           </form>

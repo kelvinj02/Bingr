@@ -31,20 +31,21 @@ def home():
     # personalized calls (which need request context) run on the main thread.
     with ThreadPoolExecutor(max_workers=2) as ex:
         f_trending_movies = ex.submit(get_trending_movies, 10)
-        f_trending_books  = ex.submit(get_trending_books, 5)
+        f_trending_books  = ex.submit(get_trending_books, 10)
         rec_movies_raw = _personalized_movie_items(top_n=5)
         rec_books_raw  = _personalized_book_items(top_n=5)
 
-    all_trending     = f_trending_movies.result()
-    trend_movies_raw = all_trending[5:]
+    trend_movies_raw = f_trending_movies.result()
     trend_books_raw  = [_norm_book(b) for b in f_trending_books.result()]
+    if not trend_books_raw:
+        trend_books_raw = rec_books_raw
 
     rec_items = ([{"kind": "movie", **m} for m in rec_movies_raw] +
                  [{"kind": "book",  **b} for b in rec_books_raw])
     random.shuffle(rec_items)
 
-    rec_titles = {i["title"] for i in rec_items}
-    trend_books_deduped = [b for b in trend_books_raw if b["title"] not in rec_titles]
+    rec_book_titles = {i["title"] for i in rec_items if i["kind"] == "book"}
+    trend_books_deduped = [b for b in trend_books_raw if b["title"] not in rec_book_titles]
     trend_items = ([{"kind": "movie", **_norm_movie(m)} for m in trend_movies_raw] +
                    [{"kind": "book",  **b} for b in trend_books_deduped])
     random.shuffle(trend_items)
@@ -180,11 +181,13 @@ def recommendations():
 
 @main.route("/trending")
 def trending():
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        f_movies = ex.submit(get_trending_movies, 20)
-        f_books  = ex.submit(get_trending_books, 20)
+    ccrc = copy_current_request_context
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        f_movies   = ex.submit(get_trending_movies, 20)
+        f_books    = ex.submit(get_trending_books, 20)
+        f_fallback = ex.submit(ccrc(lambda: _personalized_book_items(top_n=20)))
     movies_raw = [_norm_movie(m) for m in f_movies.result()]
-    books_raw  = [_norm_book(b)  for b in f_books.result()]
+    books_raw  = [_norm_book(b) for b in f_books.result()] or f_fallback.result()
 
     items = ([ {"kind": "movie", **m} for m in movies_raw] +
              [{"kind": "book",  **b} for b in books_raw])
@@ -197,12 +200,14 @@ def trending():
 @main.route("/browse")
 def top_recommendations():
     filter_type = request.args.get('type', 'all')
+    ccrc = copy_current_request_context
 
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        f_movies = ex.submit(get_trending_movies, 20)
-        f_books  = ex.submit(get_book_recommendations, max_results=20)
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        f_movies   = ex.submit(get_trending_movies, 20)
+        f_books    = ex.submit(get_book_recommendations, max_results=20)
+        f_fallback = ex.submit(ccrc(lambda: _personalized_book_items(top_n=20)))
     movies_raw = f_movies.result()
-    books_raw  = f_books.result()
+    books_raw  = f_books.result() or f_fallback.result()
 
     items = ([{"kind": "movie", **_norm_movie(m)} for m in movies_raw] +
              [{"kind": "book",  **_norm_book(b)}  for b in books_raw])

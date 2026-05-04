@@ -97,28 +97,19 @@ def _build_query(
     return "+".join(parts) if parts else "bestseller fiction"
 
 
-@cache.memoize(timeout=900)
 def get_book_recommendations(
     favorites: list[str] = None,
     genres: list[str] = None,
     mood: Optional[str] = None,
     max_results: int = 20,
 ) -> list[dict]:
-    """
-    Fetch book recommendations from the Google Books API.
+    favorites = list(favorites or [])
+    genres    = list(genres    or [])
+    _key = f"book_recs_{max_results}_{repr(sorted(favorites))}_{repr(sorted(genres))}_{mood}"
+    cached = cache.get(_key)
+    if cached is not None:
+        return cached
 
-    Args:
-        favorites:   List of book/movie titles the user likes.
-        genres:      List of genre strings (e.g. ["Thriller", "Sci-Fi"]).
-        mood:        Optional mood string (e.g. "mind-bending").
-        max_results: Number of results to return (max 40 per Google's API).
-
-    Returns:
-        List of dicts with keys: title, authors, year, genres,
-        description, rating, thumbnail, info_link.
-    """
-    favorites= favorites or []
-    genres=genres or []
     query = _build_query(favorites, genres, mood)
 
     params = {
@@ -184,6 +175,8 @@ def get_book_recommendations(
             "page_count":  info.get("pageCount"),
             "language":    info.get("language"),
         })
+    if results:
+        cache.set(_key, results, timeout=900)
     return results
 
 
@@ -317,8 +310,12 @@ _TRENDING_GENRE_QUERIES = [
 ]
 
 
-@cache.memoize(timeout=900)
 def get_trending_books(max_results: int = 20) -> list[dict]:
+    _key = f"trending_books_{max_results}"
+    cached = cache.get(_key)
+    if cached is not None:
+        return cached
+
     import random as _random
     from datetime import datetime
 
@@ -346,9 +343,8 @@ def get_trending_books(max_results: int = 20) -> list[dict]:
         except Exception:
             return []
 
-    # Fire all genre queries in parallel instead of one at a time
     pool, seen = [], set()
-    with ThreadPoolExecutor(max_workers=len(_TRENDING_GENRE_QUERIES)) as ex:
+    with ThreadPoolExecutor(max_workers=8) as ex:
         futures = [ex.submit(_fetch, q) for q in _TRENDING_GENRE_QUERIES]
         for future in as_completed(futures):
             for item in future.result():
@@ -383,4 +379,7 @@ def get_trending_books(max_results: int = 20) -> list[dict]:
     older  = [b for b in pool if b not in recent]
     _random.shuffle(recent)
     _random.shuffle(older)
-    return (recent + older)[:max_results]
+    result = (recent + older)[:max_results]
+    if result:
+        cache.set(_key, result, timeout=900)
+    return result

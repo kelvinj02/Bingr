@@ -15,6 +15,7 @@ class User(db.Model, UserMixin):
     username=db.Column(db.String(20), unique=True, nullable=False)
     email=db.Column(db.String(120), unique=True, nullable=False)
     password=db.Column(db.String(60), nullable=False)
+    created_at=db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
     comments=db.relationship('Comment', backref='author', lazy=True)
     wishlist=db.relationship('WishListItem', backref='author', lazy=True)
 
@@ -38,7 +39,7 @@ class User(db.Model, UserMixin):
     movies = db.relationship('UserMovie', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
-        return f"User('{self.username}', '{self.email}')"
+        return f"User('{self.username}', '{self.email}', '{self.created_at}')"
 
 
 class UserPreference(db.Model):
