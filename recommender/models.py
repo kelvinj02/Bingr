@@ -118,7 +118,7 @@ class SearchHistory(db.Model):
     searched_at  = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"SearchHistory(user={self.user_id}, '{self.query}')"
+        return f"SearchHistory(user={self.user_id}, '{self.search_query}')"
 
 
 class WishListItem(db.Model):

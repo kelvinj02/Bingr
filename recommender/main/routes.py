@@ -49,6 +49,7 @@ def home():
     trend_items = ([{"kind": "movie", **_norm_movie(m)} for m in trend_movies_raw] +
                    [{"kind": "book",  **b} for b in trend_books_deduped])
     random.shuffle(trend_items)
+    trend_items = trend_items[:10]
 
     return render_template("index.html", rec_items=rec_items, trend_items=trend_items)
 

@@ -103,10 +103,9 @@ def detail(title):
     df = current_app.recommender.df
     matches = df[df['Book'] == title]
 
-    _ex = ThreadPoolExecutor(max_workers=2)
-    f_chars = _ex.submit(get_book_characters, title)
-    f_cover = _ex.submit(get_book_cover, title) if not matches.empty else None
-    _ex.shutdown(wait=False)
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_chars = ex.submit(get_book_characters, title)
+        f_cover = ex.submit(get_book_cover, title) if not matches.empty else None
 
     if matches.empty:
         book_data = get_book_by_title(title)

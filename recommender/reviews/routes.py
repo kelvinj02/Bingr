@@ -47,6 +47,8 @@ def update_comment(comment_id):
         db.session.commit()
         flash("Your review has been updated!", "success")
         next_url = request.args.get('next') or request.form.get('next')
+        if next_url and not next_url.startswith('/'):
+            next_url = None
         return redirect(next_url or url_for('main.home'))
     elif request.method == 'GET':
         form.review_score.data = comment.review_score
@@ -66,4 +68,6 @@ def delete_comment(comment_id):
     db.session.commit()
     flash("Your review has been deleted.", "info")
     next_url = request.args.get('next') or request.form.get('next')
+    if next_url and not next_url.startswith('/'):
+        next_url = None
     return redirect(next_url or url_for('main.home'))
