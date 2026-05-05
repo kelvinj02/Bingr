@@ -53,22 +53,7 @@ def account():
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-    book_ratings  = UserBook.query.filter(UserBook.user_id == current_user.id,
-                                           UserBook.rating.isnot(None)).all()
-    movie_ratings = UserMovie.query.filter(UserMovie.user_id == current_user.id,
-                                           UserMovie.rating.isnot(None)).all()
-
-    ratings = []
-    for r in book_ratings:
-        ratings.append(SimpleNamespace(
-            item_type='book', item_id=r.book_title, title=r.book_title,
-            score=r.rating * 2, author=None, director=None,
-        ))
-    for r in movie_ratings:
-        ratings.append(SimpleNamespace(
-            item_type='movie', item_id=r.movie_title, title=r.movie_title,
-            score=r.rating * 2, author=None, director=None,
-        ))
+    wishlist_count = WishListItem.query.filter_by(user_id=current_user.id).count()
 
     from recommender.api_clients.movies_client import get_movie_poster, get_movie_full
     from recommender.api_clients.books_client import get_book_cover
@@ -115,7 +100,7 @@ def account():
                 pass
 
     return render_template('account.html', title='Account', form=form,
-                           ratings=ratings, comments=comments)
+                           wishlist_count=wishlist_count, comments=comments)
 
 #the route where the users enter their email to request to reset password
 @users.route("/reset_password", methods=['GET', 'POST'])

@@ -19,28 +19,19 @@
           <p class="profile-email">{{ current_user.email }}</p>
           <div class="profile-badges">
             <span class="badge badge-member">Member</span>
-            {% if ratings|length >= 10 %}<span class="badge badge-reviewer">Active Reviewer</span>{% endif %}
+            {% if comments|length >= 10 %}<span class="badge badge-reviewer">Active Reviewer</span>{% endif %}
             {% if comments|length >= 5 %}<span class="badge badge-critic">Critic</span>{% endif %}
           </div>
         </div>
         <div class="profile-stats-row">
-          <div class="profile-stat">
-            <span class="profile-stat-num">{{ ratings|length }}</span>
-            <span class="profile-stat-label">Ratings</span>
-          </div>
-          <div class="profile-stat-divider"></div>
           <div class="profile-stat">
             <span class="profile-stat-num">{{ comments|length }}</span>
             <span class="profile-stat-label">Reviews</span>
           </div>
           <div class="profile-stat-divider"></div>
           <div class="profile-stat">
-            <span class="profile-stat-num">
-              {% if ratings|length > 0 %}
-                {{ (ratings | map(attribute='score') | sum / ratings|length) | round(1) }}
-              {% else %}—{% endif %}
-            </span>
-            <span class="profile-stat-label">Avg Score</span>
+            <span class="profile-stat-num">{{ wishlist_count }}</span>
+            <span class="profile-stat-label">Wishlist</span>
           </div>
         </div>
       </div>
@@ -48,11 +39,7 @@
  
     <!-- ── tab nav ────────────────────────────────────────────────────── -->
     <div class="account-tabs">
-      <button class="account-tab active" data-tab="ratings">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Ratings <span class="tab-count">{{ ratings|length }}</span>
-      </button>
-      <button class="account-tab" data-tab="reviews">
+      <button class="account-tab active" data-tab="reviews">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Reviews <span class="tab-count">{{ comments|length }}</span>
       </button>
@@ -64,44 +51,8 @@
  
     <!-- ── tab panels ─────────────────────────────────────────────────── -->
  
-    <!-- ratings panel -->
-    <div class="tab-panel active" id="tab-ratings">
-      {% if ratings %}
-      <div class="activity-list">
-        {% for r in ratings %}
-        <a href="{{ url_for('movies.detail', title=r.title) if r.item_type == 'movie' else url_for('books.detail', title=r.title) }}" class="activity-card">
-          <div class="activity-cover {{ r.item_type }}-placeholder cover-initials">
-            {{ r.title[0] if r.title else '?' }}
-          </div>
-          <div class="activity-info">
-            <span class="activity-type">{{ r.item_type | capitalize }}</span>
-            <span class="activity-title">{{ r.title }}</span>
-            {% if r.author or r.director %}
-            <span class="activity-sub">{{ r.author or r.director }}</span>
-            {% endif %}
-          </div>
-          <div class="activity-score">
-            <span class="score-stars">
-              {% for i in range(1, 6) %}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="{{ '#f59e0b' if i <= (r.score / 2) else 'none' }}" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              {% endfor %}
-            </span>
-            <span class="score-num">{{ r.score }}<span class="score-denom">/10</span></span>
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;color:var(--muted-text)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        <h3>No ratings yet</h3>
-        <p class="empty-msg">Start exploring and rate something you've watched or read. <a href="{{ url_for('main.top_recommendations') }}">Browse top picks →</a></p>
-      </div>
-      {% endif %}
-    </div>
- 
     <!-- reviews panel -->
-    <div class="tab-panel" id="tab-reviews">
+    <div class="tab-panel active" id="tab-reviews">
       {% if comments %}
       <div class="activity-list">
         {% for c in comments %}
